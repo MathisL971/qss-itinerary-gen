@@ -3,6 +3,52 @@ export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        bodoni: ["Bodoni72", "Bodoni 72", "serif"],
+        sans: [
+          "system-ui",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "Oxygen",
+          "Ubuntu",
+          "Cantarell",
+          "sans-serif",
+        ],
+      },
+      fontSize: {
+        "bodoni-xs": [
+          "0.75rem",
+          { lineHeight: "1.2", letterSpacing: "0.01em" },
+        ],
+        "bodoni-sm": [
+          "0.875rem",
+          { lineHeight: "1.3", letterSpacing: "0.01em" },
+        ],
+        "bodoni-base": ["1rem", { lineHeight: "1.4", letterSpacing: "0.01em" }],
+        "bodoni-lg": [
+          "1.125rem",
+          { lineHeight: "1.4", letterSpacing: "0.01em" },
+        ],
+        "bodoni-xl": [
+          "1.25rem",
+          { lineHeight: "1.3", letterSpacing: "0.01em" },
+        ],
+        "bodoni-2xl": [
+          "1.5rem",
+          { lineHeight: "1.2", letterSpacing: "0.01em" },
+        ],
+        "bodoni-3xl": [
+          "1.875rem",
+          { lineHeight: "1.2", letterSpacing: "0.01em" },
+        ],
+        "bodoni-4xl": [
+          "2.25rem",
+          { lineHeight: "1.1", letterSpacing: "0.01em" },
+        ],
+        "bodoni-5xl": ["3rem", { lineHeight: "1.1", letterSpacing: "0.01em" }],
+      },
       colors: {
         border: "hsl(var(--color-border) / <alpha-value>)",
         input: "hsl(var(--color-input) / <alpha-value>)",
@@ -46,4 +92,5 @@ export default {
       },
     },
   },
+  plugins: [],
 };

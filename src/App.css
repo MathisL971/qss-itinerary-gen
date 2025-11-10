@@ -16,15 +16,27 @@
   transform: scale(1.05);
 }
 
-/* Custom input focus styles */
-input:focus {
+/* Enhanced input focus styles - luxury minimal */
+input:focus,
+textarea:focus,
+select:focus {
   outline: none;
-  box-shadow: 0 0 0 2px hsl(var(--color-ring) / 0.2);
+  box-shadow: 0 0 0 1px hsl(var(--color-primary));
+  border-color: hsl(var(--color-primary));
 }
 
-/* Smooth transitions for interactive elements */
-button, input, select, textarea {
-  transition: all 0.2s ease;
+input::placeholder,
+textarea::placeholder {
+  color: hsl(var(--color-muted-foreground) / 0.6);
+  opacity: 1;
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: hsl(var(--color-muted) / 0.5);
 }
 
 /* Calendar popover specific styles */

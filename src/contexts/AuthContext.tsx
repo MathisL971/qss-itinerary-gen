@@ -1,8 +1,10 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createContext, useContext, useEffect, useState } from "react";
+import { supabase, siteUrl } from "@/lib/supabase";
 
-type User = Awaited<ReturnType<typeof supabase.auth.getUser>>['data']['user'];
-type Session = Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session'];
+type User = Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"];
+type Session = Awaited<
+  ReturnType<typeof supabase.auth.getSession>
+>["data"]["session"];
 
 interface AuthContextType {
   user: User | null;
@@ -44,6 +46,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: `${siteUrl}/login`,
+      },
     });
     return { error };
   };
@@ -72,8 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
-

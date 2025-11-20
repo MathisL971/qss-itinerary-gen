@@ -10,4 +10,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Vite dev server handles SPA routing automatically
+  // For production, ensure your hosting provider is configured
+  // to serve index.html for all routes (see vercel.json and public/_redirects)
 })

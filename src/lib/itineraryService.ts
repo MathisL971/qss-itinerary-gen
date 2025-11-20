@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from "./supabase";
 
 export interface DayItem {
   id: string;
@@ -50,7 +50,7 @@ export function itemsToDayData(
 
   // Initialize all days
   while (currentDate <= departureDate) {
-    const dateStr = currentDate.toISOString().split('T')[0];
+    const dateStr = currentDate.toISOString().split("T")[0];
     dayDataMap.set(dateStr, {
       date: new Date(currentDate),
       items: [],
@@ -89,14 +89,14 @@ export function itemsToDayData(
 export function dayDataToItems(
   dayData: DayData[],
   itineraryId: string
-): Omit<ItineraryItem, 'id' | 'created_at'>[] {
-  const items: Omit<ItineraryItem, 'id' | 'created_at'>[] = [];
+): Omit<ItineraryItem, "id" | "created_at">[] {
+  const items: Omit<ItineraryItem, "id" | "created_at">[] = [];
 
   dayData.forEach((day) => {
     day.items.forEach((item, index) => {
       items.push({
         itinerary_id: itineraryId,
-        day_date: day.date.toISOString().split('T')[0],
+        day_date: day.date.toISOString().split("T")[0],
         time: item.time,
         event: item.event,
         location: item.location,
@@ -120,20 +120,20 @@ export async function createItinerary(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { data: null, error: { message: 'User not authenticated' } };
+    return { data: null, error: { message: "User not authenticated" } };
   }
 
   const shareToken = crypto.randomUUID();
 
   // Create itinerary
   const { data: itinerary, error: itineraryError } = await supabase
-    .from('itineraries')
+    .from("itineraries")
     .insert({
       user_id: user.id,
       client_name: clientName,
       villa_name: villaName,
-      arrival_date: arrivalDate.toISOString().split('T')[0],
-      departure_date: departureDate.toISOString().split('T')[0],
+      arrival_date: arrivalDate.toISOString().split("T")[0],
+      departure_date: departureDate.toISOString().split("T")[0],
       share_token: shareToken,
     })
     .select()
@@ -145,23 +145,29 @@ export async function createItinerary(
 
   // Create items
   const items = dayDataToItems(dayData, itinerary.id);
-  console.log('Creating itinerary items:', items.length, 'items from', dayData.length, 'days');
-  
+  console.log(
+    "Creating itinerary items:",
+    items.length,
+    "items from",
+    dayData.length,
+    "days"
+  );
+
   if (items.length > 0) {
     const { error: itemsError, data: insertedItems } = await supabase
-      .from('itinerary_items')
+      .from("itinerary_items")
       .insert(items)
       .select();
 
     if (itemsError) {
-      console.error('Error inserting items:', itemsError);
+      console.error("Error inserting items:", itemsError);
       // Rollback itinerary creation
-      await supabase.from('itineraries').delete().eq('id', itinerary.id);
+      await supabase.from("itineraries").delete().eq("id", itinerary.id);
       return { data: null, error: itemsError };
     }
-    console.log('Successfully inserted', insertedItems?.length || 0, 'items');
+    console.log("Successfully inserted", insertedItems?.length || 0, "items");
   } else {
-    console.warn('No items to insert - dayData might be empty');
+    console.warn("No items to insert - dayData might be empty");
   }
 
   return { data: itinerary, error: null };
@@ -180,21 +186,21 @@ export async function updateItinerary(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: { message: 'User not authenticated' } };
+    return { error: { message: "User not authenticated" } };
   }
 
   // Update itinerary
   const { error: itineraryError } = await supabase
-    .from('itineraries')
+    .from("itineraries")
     .update({
       client_name: clientName,
       villa_name: villaName,
-      arrival_date: arrivalDate.toISOString().split('T')[0],
-      departure_date: departureDate.toISOString().split('T')[0],
+      arrival_date: arrivalDate.toISOString().split("T")[0],
+      departure_date: departureDate.toISOString().split("T")[0],
       updated_at: new Date().toISOString(),
     })
-    .eq('id', itineraryId)
-    .eq('user_id', user.id);
+    .eq("id", itineraryId)
+    .eq("user_id", user.id);
 
   if (itineraryError) {
     return { error: itineraryError };
@@ -202,9 +208,9 @@ export async function updateItinerary(
 
   // Delete existing items
   const { error: deleteError } = await supabase
-    .from('itinerary_items')
+    .from("itinerary_items")
     .delete()
-    .eq('itinerary_id', itineraryId);
+    .eq("itinerary_id", itineraryId);
 
   if (deleteError) {
     return { error: deleteError };
@@ -214,7 +220,7 @@ export async function updateItinerary(
   const items = dayDataToItems(dayData, itineraryId);
   if (items.length > 0) {
     const { error: itemsError } = await supabase
-      .from('itinerary_items')
+      .from("itinerary_items")
       .insert(items);
 
     if (itemsError) {
@@ -233,14 +239,14 @@ export async function deleteItinerary(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: { message: 'User not authenticated' } };
+    return { error: { message: "User not authenticated" } };
   }
 
   // Delete items first (foreign key constraint)
   const { error: itemsError } = await supabase
-    .from('itinerary_items')
+    .from("itinerary_items")
     .delete()
-    .eq('itinerary_id', itineraryId);
+    .eq("itinerary_id", itineraryId);
 
   if (itemsError) {
     return { error: itemsError };
@@ -248,10 +254,10 @@ export async function deleteItinerary(
 
   // Delete itinerary
   const { error: itineraryError } = await supabase
-    .from('itineraries')
+    .from("itineraries")
     .delete()
-    .eq('id', itineraryId)
-    .eq('user_id', user.id);
+    .eq("id", itineraryId)
+    .eq("user_id", user.id);
 
   return { error: itineraryError };
 }
@@ -265,14 +271,14 @@ export async function getUserItineraries(): Promise<{
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { data: null, error: { message: 'User not authenticated' } };
+    return { data: null, error: { message: "User not authenticated" } };
   }
 
   const { data, error } = await supabase
-    .from('itineraries')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false });
+    .from("itineraries")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
 
   return { data, error };
 }
@@ -285,15 +291,15 @@ export async function getItineraryById(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { data: null, error: { message: 'User not authenticated' } };
+    return { data: null, error: { message: "User not authenticated" } };
   }
 
   // Get itinerary
   const { data: itinerary, error: itineraryError } = await supabase
-    .from('itineraries')
-    .select('*')
-    .eq('id', itineraryId)
-    .eq('user_id', user.id)
+    .from("itineraries")
+    .select("*")
+    .eq("id", itineraryId)
+    .eq("user_id", user.id)
     .single();
 
   if (itineraryError || !itinerary) {
@@ -302,11 +308,11 @@ export async function getItineraryById(
 
   // Get items
   const { data: items, error: itemsError } = await supabase
-    .from('itinerary_items')
-    .select('*')
-    .eq('itinerary_id', itineraryId)
-    .order('day_date', { ascending: true })
-    .order('sort_order', { ascending: true });
+    .from("itinerary_items")
+    .select("*")
+    .eq("itinerary_id", itineraryId)
+    .order("day_date", { ascending: true })
+    .order("sort_order", { ascending: true });
 
   if (itemsError) {
     return { data: null, error: itemsError };
@@ -321,26 +327,54 @@ export async function getItineraryById(
 export async function getSharedItinerary(
   shareToken: string
 ): Promise<{ data: ItineraryWithItems | null; error: any }> {
-  // Get itinerary by share_token (public access)
+  if (!shareToken || shareToken.trim() === "") {
+    return {
+      data: null,
+      error: { message: "Invalid share token provided" },
+    };
+  }
+
+  // Get itinerary by share_token (public access - no auth required)
+  // The RLS policy "Public can view shared itineraries" should allow this
   const { data: itinerary, error: itineraryError } = await supabase
-    .from('itineraries')
-    .select('*')
-    .eq('share_token', shareToken)
+    .from("itineraries")
+    .select("*")
+    .eq("share_token", shareToken.trim())
     .single();
 
-  if (itineraryError || !itinerary) {
+  if (itineraryError) {
+    console.error("Error fetching shared itinerary:", itineraryError);
+    // Provide more helpful error messages
+    if (itineraryError.code === "PGRST116") {
+      return {
+        data: null,
+        error: {
+          ...itineraryError,
+          message:
+            "Shared itinerary not found. The link may be invalid or expired.",
+        },
+      };
+    }
     return { data: null, error: itineraryError };
   }
 
-  // Get items
+  if (!itinerary) {
+    return {
+      data: null,
+      error: { message: "Shared itinerary not found" },
+    };
+  }
+
+  // Get items (public access via RLS policy)
   const { data: items, error: itemsError } = await supabase
-    .from('itinerary_items')
-    .select('*')
-    .eq('itinerary_id', itinerary.id)
-    .order('day_date', { ascending: true })
-    .order('sort_order', { ascending: true });
+    .from("itinerary_items")
+    .select("*")
+    .eq("itinerary_id", itinerary.id)
+    .order("day_date", { ascending: true })
+    .order("sort_order", { ascending: true });
 
   if (itemsError) {
+    console.error("Error fetching shared itinerary items:", itemsError);
     return { data: null, error: itemsError };
   }
 
@@ -353,4 +387,3 @@ export async function getSharedItinerary(
 export function generateShareUrl(shareToken: string): string {
   return `${window.location.origin}/share/${shareToken}`;
 }
-

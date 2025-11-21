@@ -94,7 +94,7 @@ export function ItineraryEditor({
     setDepartureDate(initialDepartureDate);
 
     // Only update dayData from props if it has items, or if dates are invalid
-    // Otherwise, let the day generation effect handle it (including dummy data generation)
+    // Otherwise, let the day generation effect handle it
     const hasItems = initialDayData.some((day) => day.items.length > 0);
     if (
       hasItems ||
@@ -151,7 +151,6 @@ export function ItineraryEditor({
       // Generate days
       const days: DayData[] = [];
       const currentDate = new Date(arrivalDate);
-      const hasExistingItems = prevDayData.some((day) => day.items.length > 0);
 
       while (currentDate <= departureDate) {
         const dateStr = currentDate.toISOString().split("T")[0];
@@ -159,14 +158,8 @@ export function ItineraryEditor({
           (d) => d.date.toISOString().split("T")[0] === dateStr
         );
 
-        // If we have existing items, use them; otherwise generate dummy data for new itineraries
+        // If we have existing items, use them; otherwise use empty array
         let items: DayItem[] = existingDay?.items || [];
-
-        // Generate dummy data if no existing items and this is a new itinerary (5 days or less)
-        if (items.length === 0 && !hasExistingItems && expectedDays <= 5) {
-          const dayIndex = days.length;
-          items = generateDummyDataForDay(dayIndex, expectedDays);
-        }
 
         days.push({
           date: new Date(currentDate),
@@ -179,180 +172,6 @@ export function ItineraryEditor({
       return days;
     });
   }, [arrivalDate, departureDate]);
-
-  // Helper function to generate dummy data for a specific day
-  const generateDummyDataForDay = (
-    dayIndex: number,
-    totalDays: number
-  ): DayItem[] => {
-    const items: DayItem[] = [];
-
-    if (dayIndex === 0) {
-      // Day 1 - Arrival day
-      items.push(
-        {
-          id: crypto.randomUUID(),
-          time: "14:30",
-          event: "Arrival with Flight Winair 2334",
-          location: "Princess Juliana International Airport",
-        },
-        {
-          id: crypto.randomUUID(),
-          time: "15:30",
-          event: "Private Transfer to Villa",
-          location: "Oceanview Villa",
-        },
-        {
-          id: crypto.randomUUID(),
-          time: "18:00",
-          event: "Welcome Dinner",
-          location: "Beachfront Restaurant",
-        }
-      );
-    } else if (dayIndex === 1) {
-      // Day 2
-      items.push(
-        {
-          id: crypto.randomUUID(),
-          time: "09:00",
-          event: "Breakfast at Villa",
-          location: "Oceanview Villa",
-        },
-        {
-          id: crypto.randomUUID(),
-          time: "10:30",
-          event: "Snorkeling Tour",
-          location: "Coral Reef Bay",
-        },
-        {
-          id: crypto.randomUUID(),
-          time: "14:00",
-          event: "Lunch at Beach Club",
-          location: "Sunset Beach Club",
-        },
-        {
-          id: crypto.randomUUID(),
-          time: "19:00",
-          event: "Sunset Cruise",
-          location: "Marina Bay",
-        }
-      );
-    } else if (dayIndex === 2) {
-      // Day 3
-      items.push(
-        {
-          id: crypto.randomUUID(),
-          time: "08:00",
-          event: "Early Morning Yoga Session",
-          location: "Beach Pavilion",
-        },
-        {
-          id: crypto.randomUUID(),
-          time: "11:00",
-          event: "Island Tour",
-          location: "Various Locations",
-        },
-        {
-          id: crypto.randomUUID(),
-          time: "16:00",
-          event: "Shopping at Local Market",
-          location: "Downtown Market",
-        },
-        {
-          id: crypto.randomUUID(),
-          time: "20:00",
-          event: "Fine Dining Experience",
-          location: "The Cliff Restaurant",
-        }
-      );
-    } else if (dayIndex === 3) {
-      // Day 4
-      items.push(
-        {
-          id: crypto.randomUUID(),
-          time: "09:00",
-          event: "Breakfast at Villa",
-          location: "Oceanview Villa",
-        },
-        {
-          id: crypto.randomUUID(),
-          time: "11:00",
-          event: "Beach Day",
-          location: "Gouverneur Beach",
-        },
-        {
-          id: crypto.randomUUID(),
-          time: "15:00",
-          event: "Afternoon Spa Treatment",
-          location: "Luxury Spa Resort",
-        },
-        {
-          id: crypto.randomUUID(),
-          time: "19:30",
-          event: "Dinner at Restaurant",
-          location: "Bonito St. Barth",
-        }
-      );
-    } else if (dayIndex === 4) {
-      // Day 5
-      items.push(
-        {
-          id: crypto.randomUUID(),
-          time: "08:30",
-          event: "Breakfast at Villa",
-          location: "Oceanview Villa",
-        },
-        {
-          id: crypto.randomUUID(),
-          time: "10:00",
-          event: "Water Sports Activities",
-          location: "Grand Cul-de-Sac Beach",
-        },
-        {
-          id: crypto.randomUUID(),
-          time: "13:00",
-          event: "Lunch at Beach Restaurant",
-          location: "La Gloriette",
-        },
-        {
-          id: crypto.randomUUID(),
-          time: "17:00",
-          event: "Shopping in Gustavia",
-          location: "Gustavia Shopping District",
-        },
-        {
-          id: crypto.randomUUID(),
-          time: "20:00",
-          event: "Cocktail Hour",
-          location: "Le Select Bar",
-        }
-      );
-    } else if (dayIndex === totalDays - 1) {
-      // Last day - Departure day
-      items.push(
-        {
-          id: crypto.randomUUID(),
-          time: "09:00",
-          event: "Check-out and Breakfast",
-          location: "Oceanview Villa",
-        },
-        {
-          id: crypto.randomUUID(),
-          time: "11:00",
-          event: "Private Transfer to Airport",
-          location: "Princess Juliana International Airport",
-        },
-        {
-          id: crypto.randomUUID(),
-          time: "14:00",
-          event: "Departure Flight Winair 2335",
-          location: "Princess Juliana International Airport",
-        }
-      );
-    }
-
-    return items;
-  };
 
   // Helper to add item to a specific day
   const addDayItem = (dayIndex: number) => {
@@ -509,7 +328,7 @@ export function ItineraryEditor({
               alt="QSS Villa Rental Saint Barth Logo"
               className="logo mx-auto mb-8"
             />
-            <p className="text-muted-foreground text-base font-bodoni font-normal tracking-[0.05em] uppercase">
+            <p className="text-muted-foreground text-base font-normal tracking-[0.05em] uppercase">
               Create personalized travel itineraries
             </p>
           </div>
@@ -517,15 +336,23 @@ export function ItineraryEditor({
 
         <form className="space-y-8">
           {/* Basic Info Section */}
-          <div className="space-y-8 border border-border rounded-lg p-10 md:p-12 bg-card shadow-sm">
-            <div className="mb-10">
-              <h2 className="text-3xl md:text-4xl font-bodoni font-bold tracking-[0.05em] uppercase">
+          <div className="space-y-8 border border-border/60 rounded-xl p-8 md:p-10 bg-card shadow-sm hover:shadow-md transition-shadow duration-300">
+            <div className="mb-8 border-b border-border/40 pb-6">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-wide uppercase text-foreground">
                 Basic Information
               </h2>
+              <p className="text-muted-foreground mt-2 font-light">
+                Enter the key details for this trip
+              </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="clientName">Client Name</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <Label
+                  htmlFor="clientName"
+                  className="text-xs uppercase tracking-widest text-muted-foreground font-semibold"
+                >
+                  Client Name
+                </Label>
                 <Input
                   id="clientName"
                   value={clientName}
@@ -534,8 +361,13 @@ export function ItineraryEditor({
                   disabled={readOnly}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="villaName">Villa Name</Label>
+              <div className="space-y-3">
+                <Label
+                  htmlFor="villaName"
+                  className="text-xs uppercase tracking-widest text-muted-foreground font-semibold"
+                >
+                  Villa Name
+                </Label>
                 <Input
                   id="villaName"
                   value={villaName}
@@ -544,28 +376,35 @@ export function ItineraryEditor({
                   disabled={readOnly}
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Arrival Date</Label>
+              <div className="space-y-3">
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+                  Arrival Date
+                </Label>
                 <Popover
                   open={arrivalDateOpen}
                   onOpenChange={setArrivalDateOpen}
                 >
                   <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
+                    <button
                       className={cn(
-                        "w-full justify-start text-left font-normal",
+                        "flex h-10 w-full rounded-md border border-input items-center cursor-pointer bg-transparent px-3 py-2 text-sm ring-offset-background transition-colors duration-200",
+                        "hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        "focus:outline-none focus:ring-2 focus:ring-ring",
+                        "disabled:cursor-not-allowed disabled:opacity-50",
+                        "justify-start text-left gap-2",
+                        arrivalDateOpen && "ring-2 ring-ring",
                         !arrivalDate && "text-muted-foreground"
                       )}
                       disabled={readOnly}
+                      type="button"
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <CalendarIcon className="h-4 w-4 shrink-0" />
                       {arrivalDate ? (
                         format(arrivalDate, "PPP")
                       ) : (
                         <span>Pick a date</span>
                       )}
-                    </Button>
+                    </button>
                   </PopoverTrigger>
                   {!readOnly && (
                     <PopoverContent
@@ -582,28 +421,35 @@ export function ItineraryEditor({
                   )}
                 </Popover>
               </div>
-              <div className="space-y-2">
-                <Label>Departure Date</Label>
+              <div className="space-y-3">
+                <Label className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+                  Departure Date
+                </Label>
                 <Popover
                   open={departureDateOpen}
                   onOpenChange={setDepartureDateOpen}
                 >
                   <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
+                    <button
                       className={cn(
-                        "w-full justify-start text-left font-normal",
+                        "flex h-10 w-full rounded-md border border-input items-center cursor-pointer bg-transparent px-3 py-2 text-sm ring-offset-background transition-colors duration-200",
+                        "hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        "focus:outline-none focus:ring-2 focus:ring-ring",
+                        "disabled:cursor-not-allowed disabled:opacity-50",
+                        "justify-start text-left gap-2",
+                        departureDateOpen && "ring-2 ring-ring",
                         !departureDate && "text-muted-foreground"
                       )}
                       disabled={readOnly}
+                      type="button"
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <CalendarIcon className="h-4 w-4 shrink-0" />
                       {departureDate ? (
                         format(departureDate, "PPP")
                       ) : (
                         <span>Pick a date</span>
                       )}
-                    </Button>
+                    </button>
                   </PopoverTrigger>
                   {!readOnly && (
                     <PopoverContent
@@ -625,48 +471,46 @@ export function ItineraryEditor({
 
           {/* Itinerary Breakdown Section */}
           {arrivalDate && departureDate && dayData.length > 0 && (
-            <div className="space-y-12 border border-border rounded-lg p-10 md:p-12 bg-card shadow-sm animate-fade-in">
-              <div className="mb-10">
-                <h2 className="text-3xl md:text-4xl font-bodoni font-bold tracking-[0.05em] uppercase">
+            <div className="space-y-16 animate-fade-in">
+              <div className="text-center py-8 m-0">
+                <h2 className="text-3xl md:text-4xl font-bold tracking-widest uppercase border-b-2 border-foreground/5 inline-block pb-4">
                   Itinerary Breakdown
                 </h2>
               </div>
               <div className="space-y-12">
                 {dayData.map((day, dayIndex) => (
                   <div key={day.date.toISOString()} className="space-y-6 group">
-                    <div className="pb-6 border-b border-border">
-                      <div className="flex gap-6 items-center">
-                        <span className="text-6xl md:text-7xl font-bodoni font-bold text-foreground/10 leading-none">
-                          {String(dayIndex + 1).padStart(2, "0")}
-                        </span>
-                        <div>
-                          <h3 className="text-3xl md:text-4xl font-bodoni font-bold tracking-[0.05em] uppercase mb-2">
-                            Day {dayIndex + 1}
-                          </h3>
-                          <p className="text-sm text-muted-foreground font-bodoni font-normal tracking-[0.05em] uppercase">
-                            {format(day.date, "EEEE, MMMM d, yyyy")}
-                          </p>
-                        </div>
+                    <div className="flex gap-6 border-b border-border/40 pb-4 items-center">
+                      <span className="text-5xl md:text-6xl font-bodoni font-bold text-foreground/5 leading-none select-none">
+                        {String(dayIndex + 1).padStart(2, "0")}
+                      </span>
+                      <div>
+                        <h3 className="text-2xl md:text-3xl font-bold tracking-wide uppercase mb-1">
+                          Day {dayIndex + 1}
+                        </h3>
+                        <p className="text-sm text-muted-foreground tracking-widest uppercase">
+                          {format(day.date, "EEEE, MMMM d, yyyy")}
+                        </p>
                       </div>
                     </div>
-                    <div className="border border-border overflow-hidden bg-card">
+                    <div className="border border-border/60 rounded-xl overflow-hidden bg-card shadow-sm hover:shadow-md transition-shadow duration-300">
                       <Table>
                         <TableHeader>
-                          <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border">
+                          <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/40">
                             {!readOnly && (
                               <TableHead className="w-[50px]"></TableHead>
                             )}
-                            <TableHead className="w-[180px] font-bodoni font-bold text-xs tracking-[0.1em] uppercase">
+                            <TableHead className="w-[180px] font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4">
                               Time
                             </TableHead>
-                            <TableHead className="font-bodoni font-bold text-xs tracking-[0.1em] uppercase">
+                            <TableHead className="font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4">
                               Event
                             </TableHead>
-                            <TableHead className="font-bodoni font-bold text-xs tracking-[0.1em] uppercase">
+                            <TableHead className="font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4">
                               Location
                             </TableHead>
                             {!readOnly && (
-                              <TableHead className="w-[140px] text-center font-bodoni font-bold text-xs tracking-[0.1em] uppercase">
+                              <TableHead className="w-[140px] text-center font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4">
                                 Actions
                               </TableHead>
                             )}
@@ -677,20 +521,15 @@ export function ItineraryEditor({
                             <TableRow>
                               <TableCell
                                 colSpan={readOnly ? 3 : 5}
-                                className="text-center text-muted-foreground py-16"
+                                className="text-center py-12"
                               >
-                                <div className="flex flex-col items-center gap-3">
-                                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4 border border-border">
-                                    <Plus className="h-6 w-6 text-muted-foreground" />
+                                <div className="flex flex-col items-center gap-3 text-muted-foreground/50">
+                                  <div className="w-12 h-12 rounded-full bg-secondary/50 flex items-center justify-center mb-2">
+                                    <Plus className="h-5 w-5" />
                                   </div>
-                                  <p className="font-bodoni font-bold text-xl tracking-[0.05em] uppercase">
+                                  <p className="text-lg tracking-wide uppercase">
                                     No items added yet
                                   </p>
-                                  {!readOnly && (
-                                    <p className="text-sm text-muted-foreground">
-                                      Click "Add Item" to get started
-                                    </p>
-                                  )}
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -830,9 +669,9 @@ export function ItineraryEditor({
                                       </div>
                                     </TableCell>
                                   )}
-                                  <TableCell className="align-middle">
+                                  <TableCell className="align-middle px-4">
                                     {readOnly ? (
-                                      <div className="py-2">
+                                      <div className="py-2 font-medium">
                                         {item.time || "-"}
                                       </div>
                                     ) : (
@@ -850,9 +689,9 @@ export function ItineraryEditor({
                                       />
                                     )}
                                   </TableCell>
-                                  <TableCell className="align-middle">
+                                  <TableCell className="align-middle px-4">
                                     {readOnly ? (
-                                      <div className="py-2">
+                                      <div className="py-2 font-medium">
                                         {item.event || "-"}
                                       </div>
                                     ) : (
@@ -867,13 +706,13 @@ export function ItineraryEditor({
                                           )
                                         }
                                         placeholder="e.g., Arrival with Flight Winair 2334"
-                                        className="h-10 bg-background/50"
+                                        className="h-10 bg-transparent border border-input hover:border-border/50 focus:border-ring/50 px-3"
                                       />
                                     )}
                                   </TableCell>
-                                  <TableCell className="align-middle">
+                                  <TableCell className="align-middle px-4">
                                     {readOnly ? (
-                                      <div className="py-2">
+                                      <div className="py-2 text-muted-foreground">
                                         {item.location || "-"}
                                       </div>
                                     ) : (
@@ -888,7 +727,7 @@ export function ItineraryEditor({
                                           )
                                         }
                                         placeholder="e.g., Airport X"
-                                        className="h-10 bg-background/50"
+                                        className="h-10 bg-transparent border border-input hover:border-border/50 focus:border-ring/50 px-3"
                                       />
                                     )}
                                   </TableCell>
@@ -946,15 +785,17 @@ export function ItineraryEditor({
                       </Table>
                     </div>
                     {!readOnly && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => addDayItem(dayIndex)}
-                        className="w-full sm:w-auto"
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Item
-                      </Button>
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => addDayItem(dayIndex)}
+                          className="w-full sm:w-auto gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          <span>Add Item</span>
+                        </Button>
+                      </div>
                     )}
                   </div>
                 ))}

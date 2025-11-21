@@ -1,14 +1,15 @@
-import { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { ClipLoader } from "react-spinners";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
@@ -17,16 +18,16 @@ export function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     const { error } = await signIn(email, password);
 
     if (error) {
-      setError(error.message || 'Failed to sign in');
+      setError(error.message || "Failed to sign in");
       setLoading(false);
     } else {
-      navigate('/itineraries');
+      navigate("/itineraries");
     }
   };
 
@@ -39,13 +40,18 @@ export function LoginPage() {
             alt="QSS Villa Rental Saint Barth Logo"
             className="logo mx-auto mb-6"
           />
-          <h1 className="text-5xl font-bodoni font-bold tracking-[0.05em] uppercase">Sign In</h1>
+          <h1 className="text-5xl font-bold tracking-[0.05em] uppercase">
+            Sign In
+          </h1>
           <p className="text-muted-foreground mt-3 text-base">
             Sign in to access your itineraries
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 bg-card border border-border rounded-lg p-10 shadow-sm animate-scale-in">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6 bg-card border border-border rounded-lg p-10 shadow-sm animate-scale-in"
+        >
           {successMessage && (
             <div className="bg-green-500/10 text-green-600 dark:text-green-400 px-4 py-3 rounded-md text-sm">
               {successMessage}
@@ -83,12 +89,19 @@ export function LoginPage() {
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
+          <Button type="submit" className="w-full" disabled={loading} size="lg">
+            {loading ? (
+              <>
+                <ClipLoader color="currentColor" size={16} />
+                <span>Signing in...</span>
+              </>
+            ) : (
+              <span>Sign In</span>
+            )}
           </Button>
 
           <div className="text-center text-sm text-muted-foreground">
-            Don't have an account?{' '}
+            Don't have an account?{" "}
             <Link
               to="/signup"
               className="text-primary hover:underline font-medium"
@@ -101,4 +114,3 @@ export function LoginPage() {
     </div>
   );
 }
-

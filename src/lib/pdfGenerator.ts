@@ -48,7 +48,8 @@ export async function generatePDF(
   let logoWidth = 0;
   let logoHeight = 0;
   try {
-    const response = await fetch("/logo.png");
+    // Use the high-resolution JPG logo instead of the small PNG
+    const response = await fetch("/qss-villa-rental-logo.jpg");
     const blob = await response.blob();
     logoDataUrl = await new Promise<string>((resolve) => {
       const reader = new FileReader();
@@ -136,27 +137,33 @@ export async function generatePDF(
   const fontSize = 10;
 
   // Calculate logo dimensions once
-  let logoWidthMm = 0;
-  let logoHeightMm = 0;
+  // jsPDF uses points (pt) where 1 pt = 1/72 inch
+  // We'll scale the logo to a tiny width (e.g., 17mm = ~48pt)
+  let logoWidthPt = 0;
+  let logoHeightPt = 0;
   if (logoDataUrl && logoWidth > 0 && logoHeight > 0) {
-    const pixelsToMm = 25.4 / 72;
-    logoWidthMm = logoWidth * pixelsToMm;
-    logoHeightMm = logoHeight * pixelsToMm;
+    // Target width: 17mm = 17 * 72 / 25.4 ≈ 48 points
+    const targetWidthMm = 17;
+    const targetWidthPt = (targetWidthMm * 72) / 25.4;
+    const aspectRatio = logoHeight / logoWidth;
+    logoWidthPt = targetWidthPt;
+    logoHeightPt = targetWidthPt * aspectRatio;
   }
-  const headerHeight = logoHeightMm > 0 ? logoHeightMm + 8 : 18;
+  const headerHeight = logoHeightPt > 0 ? logoHeightPt + 8 : 18;
 
   // Function to draw header with logo on every page
   const drawHeader = () => {
     const headerY = margin;
     if (logoDataUrl && logoWidth > 0 && logoHeight > 0) {
-      const logoX = (pageWidth - logoWidthMm) / 2;
+      const logoX = (pageWidth - logoWidthPt) / 2;
+      // Use JPEG format for JPG files - jsPDF will handle the high-resolution image properly
       doc.addImage(
         logoDataUrl,
         "JPEG",
         logoX,
         headerY,
-        logoWidthMm,
-        logoHeightMm
+        logoWidthPt,
+        logoHeightPt
       );
     } else {
       // Fallback to text if logo fails to load

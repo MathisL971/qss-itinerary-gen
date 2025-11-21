@@ -1,30 +1,31 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ClipLoader } from "react-spinners";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function SignUpPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError("Password must be at least 6 characters");
       return;
     }
 
@@ -33,12 +34,12 @@ export function SignUpPage() {
     const { error } = await signUp(email, password);
 
     if (error) {
-      setError(error.message || 'Failed to sign up');
+      setError(error.message || "Failed to sign up");
       setLoading(false);
     } else {
       // Sign up successful, navigate to login
-      navigate('/login', {
-        state: { message: 'Account created! Please sign in.' },
+      navigate("/login", {
+        state: { message: "Account created! Please sign in." },
       });
     }
   };
@@ -52,13 +53,18 @@ export function SignUpPage() {
             alt="QSS Villa Rental Saint Barth Logo"
             className="logo mx-auto mb-6"
           />
-          <h1 className="text-5xl font-bodoni font-bold tracking-[0.05em] uppercase">Sign Up</h1>
+          <h1 className="text-5xl font-bold tracking-[0.05em] uppercase">
+            Sign Up
+          </h1>
           <p className="text-muted-foreground mt-3 text-base">
             Create an account to get started
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 bg-card border border-border rounded-lg p-10 shadow-sm animate-scale-in">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6 bg-card border border-border rounded-lg p-10 shadow-sm animate-scale-in"
+        >
           {error && (
             <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md text-sm">
               {error}
@@ -104,12 +110,19 @@ export function SignUpPage() {
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Creating account...' : 'Sign Up'}
+          <Button type="submit" className="w-full" disabled={loading} size="lg">
+            {loading ? (
+              <>
+                <ClipLoader color="currentColor" size={16} />
+                <span>Creating account...</span>
+              </>
+            ) : (
+              <span>Sign Up</span>
+            )}
           </Button>
 
           <div className="text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
+            Already have an account?{" "}
             <Link
               to="/login"
               className="text-primary hover:underline font-medium"
@@ -122,4 +135,3 @@ export function SignUpPage() {
     </div>
   );
 }
-

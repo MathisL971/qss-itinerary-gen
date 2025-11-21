@@ -44,23 +44,23 @@ export function TimePicker({
 
   const parseTime = (time: string): { hours: number; minutes: number } => {
     if (!time) return { hours: 0, minutes: 0 };
-    
+
     // Handle 12-hour format (e.g., "2:40 PM")
     const pmMatch = time.match(/(\d+):(\d+)\s*PM/i);
     const amMatch = time.match(/(\d+):(\d+)\s*AM/i);
-    
+
     if (pmMatch) {
       const hours = parseInt(pmMatch[1], 10);
       const minutes = parseInt(pmMatch[2], 10);
       return { hours: hours === 12 ? 12 : hours + 12, minutes };
     }
-    
+
     if (amMatch) {
       const hours = parseInt(amMatch[1], 10);
       const minutes = parseInt(amMatch[2], 10);
       return { hours: hours === 12 ? 0 : hours, minutes };
     }
-    
+
     // Handle 24-hour format (e.g., "14:40")
     const match = time.match(/(\d+):(\d+)/);
     if (match) {
@@ -69,12 +69,18 @@ export function TimePicker({
         minutes: parseInt(match[2], 10),
       };
     }
-    
+
     return { hours: 0, minutes: 0 };
   };
 
-  const handleTimeChange = (hours: number, minutes: number, closeAfterSelect = false) => {
-    const time24 = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+  const handleTimeChange = (
+    hours: number,
+    minutes: number,
+    closeAfterSelect = true
+  ) => {
+    const time24 = `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}`;
     const time12 = formatTime(time24);
     setTimeValue(time12);
     onChange?.(time12);
@@ -93,19 +99,27 @@ export function TimePicker({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
+        <button
+          type="button"
           className={cn(
-            "w-full justify-start text-left font-normal h-10 bg-background/50",
+            "flex h-10 w-full rounded-md border border-input items-center cursor-pointer bg-transparent px-3 py-2 text-sm ring-offset-background transition-colors duration-200",
+            "hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            "focus:outline-none focus:ring-2 focus:ring-ring",
+            "disabled:cursor-not-allowed disabled:opacity-50",
+            "justify-start text-left gap-2",
+            open && "ring-2 ring-ring",
             !timeValue && "text-muted-foreground",
             className
           )}
         >
-          <Clock className="mr-2 h-4 w-4" />
-          {timeValue || placeholder}
-        </Button>
+          <Clock className="h-4 w-4 shrink-0" />
+          {timeValue || <span>{placeholder}</span>}
+        </button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-3 bg-[hsl(var(--color-popover))] border-border" align="start">
+      <PopoverContent
+        className="w-auto p-3 bg-[hsl(var(--color-popover))] border-border rounded-lg"
+        align="start"
+      >
         <div className="flex items-center gap-4">
           {/* Hours */}
           <div className="flex flex-col items-center gap-2">
@@ -118,10 +132,15 @@ export function TimePicker({
                   key={h}
                   variant={displayHours === h ? "default" : "ghost"}
                   size="sm"
-                  className="w-12 h-8"
+                  className="w-12 h-8 py-4"
                   onClick={() => {
-                    const newHours = ampm === "PM" && h !== 12 ? h + 12 : ampm === "AM" && h === 12 ? 0 : h;
-                    handleTimeChange(newHours, minutes, true);
+                    const newHours =
+                      ampm === "PM" && h !== 12
+                        ? h + 12
+                        : ampm === "AM" && h === 12
+                        ? 0
+                        : h;
+                    handleTimeChange(newHours, minutes, false);
                   }}
                 >
                   {h}
@@ -143,7 +162,7 @@ export function TimePicker({
                     key={m}
                     variant={minutes === m ? "default" : "ghost"}
                     size="sm"
-                    className="w-12 h-8"
+                    className="w-12 h-8 py-4"
                     onClick={() => handleTimeChange(hours, m, true)}
                   >
                     {m.toString().padStart(2, "0")}
@@ -164,7 +183,11 @@ export function TimePicker({
                 className="w-12 h-8"
                 onClick={() => {
                   const newHours = ampm === "PM" ? hours - 12 : hours;
-                  handleTimeChange(newHours === 0 ? 0 : newHours, minutes, true);
+                  handleTimeChange(
+                    newHours === 0 ? 0 : newHours,
+                    minutes,
+                    true
+                  );
                 }}
               >
                 AM
@@ -175,7 +198,11 @@ export function TimePicker({
                 className="w-12 h-8"
                 onClick={() => {
                   const newHours = ampm === "AM" ? hours + 12 : hours;
-                  handleTimeChange(newHours === 24 ? 12 : newHours, minutes, true);
+                  handleTimeChange(
+                    newHours === 24 ? 12 : newHours,
+                    minutes,
+                    true
+                  );
                 }}
               >
                 PM
@@ -186,7 +213,9 @@ export function TimePicker({
         <div className="mt-4 pt-4 border-t border-border">
           <Input
             type="time"
-            value={`${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`}
+            value={`${hours.toString().padStart(2, "0")}:${minutes
+              .toString()
+              .padStart(2, "0")}`}
             onChange={(e) => {
               const [h, m] = e.target.value.split(":").map(Number);
               handleTimeChange(h, m);
@@ -198,4 +227,3 @@ export function TimePicker({
     </Popover>
   );
 }
-

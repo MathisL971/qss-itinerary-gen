@@ -92,8 +92,15 @@ export function EditItineraryPage() {
 
     if (isNew) {
       // Create new itinerary
-      console.log('Creating itinerary with dayData:', editorData.dayData.length, 'days');
-      console.log('Total items:', editorData.dayData.reduce((sum, day) => sum + day.items.length, 0));
+      console.log(
+        "Creating itinerary with dayData:",
+        editorData.dayData.length,
+        "days"
+      );
+      console.log(
+        "Total items:",
+        editorData.dayData.reduce((sum, day) => sum + day.items.length, 0)
+      );
       const { data, error: err } = await createItinerary(
         editorData.clientName,
         editorData.villaName,
@@ -136,7 +143,9 @@ export function EditItineraryPage() {
         <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
           <div className="flex flex-col items-center gap-4">
             <ClipLoader color="#1a1a1a" size={48} />
-            <div className="text-muted-foreground font-medium">Loading itinerary...</div>
+            <div className="text-muted-foreground font-medium">
+              Loading itinerary...
+            </div>
           </div>
         </div>
       </Layout>
@@ -156,7 +165,7 @@ export function EditItineraryPage() {
   return (
     <Layout>
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-10">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between">
           <Button
             variant="outline"
             onClick={() => navigate("/itineraries")}
@@ -165,9 +174,23 @@ export function EditItineraryPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to Itineraries
           </Button>
-          <Button onClick={handleSave} disabled={saving} className="gap-2">
-            <Save className="h-4 w-4" />
-            {saving ? "Saving..." : isNew ? "Create" : "Save"}
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            size="lg"
+            className="gap-2"
+          >
+            {saving ? (
+              <>
+                <ClipLoader color="currentColor" size={16} />
+                <span>Saving...</span>
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                <span>{isNew ? "Create" : "Save"}</span>
+              </>
+            )}
           </Button>
         </div>
 

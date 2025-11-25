@@ -10,12 +10,14 @@ interface ClientSelectorProps {
   onSelect: (client: Client | null, name: string) => void;
   initialName?: string;
   className?: string;
+  readOnly?: boolean;
 }
 
 export function ClientSelector({
   onSelect,
   initialName = "",
   className,
+  readOnly = false,
 }: ClientSelectorProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(initialName);
@@ -27,6 +29,7 @@ export function ClientSelector({
   }, [initialName]);
 
   useEffect(() => {
+    if (readOnly) return;
     const delayDebounceFn = setTimeout(() => {
       if (searchTerm) {
         searchClients(searchTerm).then(({ data }) => {
@@ -38,20 +41,33 @@ export function ClientSelector({
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm]);
+  }, [searchTerm, readOnly]);
 
   const handleSelect = (client: Client) => {
+    if (readOnly) return;
     setSearchTerm(client.name);
     onSelect(client, client.name);
     setOpen(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (readOnly) return;
     const newName = e.target.value;
     setSearchTerm(newName);
     onSelect(null, newName); // Pass name, no ID
     setOpen(true);
   };
+
+  if (readOnly) {
+    return (
+      <div className={cn("relative", className)}>
+        <Label htmlFor="client-search">Client Name</Label>
+        <div className="py-2 font-medium text-foreground">
+          {initialName || "-"}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("relative", className)}>

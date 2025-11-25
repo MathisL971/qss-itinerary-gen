@@ -377,7 +377,7 @@ export function ItineraryEditor({
 
   // Notify parent of data changes (only when user makes changes, not when props update)
   useEffect(() => {
-    if (!onDataChange) {
+    if (!onDataChange || readOnly) {
       return;
     }
 
@@ -444,9 +444,11 @@ export function ItineraryEditor({
               alt="QSS Villa Rental Saint Barth Logo"
               className="logo mx-auto mb-8"
             />
-            <p className="text-muted-foreground text-base font-normal tracking-[0.05em] uppercase">
-              Create personalized travel itineraries
-            </p>
+            {!readOnly && (
+              <p className="text-muted-foreground text-base font-normal tracking-[0.05em] uppercase">
+                Create personalized travel itineraries
+              </p>
+            )}
           </div>
         )}
 
@@ -458,15 +460,18 @@ export function ItineraryEditor({
                 <h2 className="text-2xl md:text-3xl font-bold tracking-wide uppercase text-foreground">
                   Basic Information
                 </h2>
-                <p className="text-muted-foreground mt-2 font-light">
-                  Enter the key details for this trip
-                </p>
+                {!readOnly && (
+                  <p className="text-muted-foreground mt-2 font-light">
+                    Enter the key details for this trip
+                  </p>
+                )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-3">
                   <ClientSelector
                     value={clientId}
                     initialName={clientName}
+                    readOnly={readOnly}
                     onSelect={(client, name) => {
                       setClientName(name);
                       setClientId(client?.id);
@@ -477,6 +482,7 @@ export function ItineraryEditor({
                   <AccommodationSelector
                     value={accommodationId}
                     initialName={villaName}
+                    readOnly={readOnly}
                     onSelect={(acc, name) => {
                       setVillaName(name);
                       setAccommodationId(acc?.id);
@@ -487,91 +493,103 @@ export function ItineraryEditor({
                   <Label className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
                     Arrival Date
                   </Label>
-                  <Popover
-                    open={arrivalDateOpen}
-                    onOpenChange={setArrivalDateOpen}
-                  >
-                    <PopoverTrigger asChild>
-                      <button
-                        className={cn(
-                          "flex h-10 w-full rounded-md border border-input items-center cursor-pointer bg-transparent px-3 py-2 text-sm ring-offset-background transition-colors duration-200",
-                          "hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                          "focus:outline-none focus:ring-2 focus:ring-ring",
-                          "disabled:cursor-not-allowed disabled:opacity-50",
-                          "justify-start text-left gap-2",
-                          arrivalDateOpen && "ring-2 ring-ring",
-                          !arrivalDate && "text-muted-foreground"
-                        )}
-                        disabled={readOnly || datesLocked}
-                        type="button"
-                      >
-                        <CalendarIcon className="h-4 w-4 shrink-0" />
-                        {arrivalDate ? (
-                          format(arrivalDate, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                      </button>
-                    </PopoverTrigger>
-                    {!readOnly && !datesLocked && (
-                      <PopoverContent
-                        className="w-auto p-0 bg-[hsl(var(--color-popover))] border-border"
-                        align="start"
-                      >
-                        <Calendar
-                          mode="single"
-                          selected={arrivalDate}
-                          onSelect={handleArrivalDateChange}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    )}
-                  </Popover>
+                  {readOnly ? (
+                    <div className="py-2 font-medium text-foreground">
+                      {arrivalDate ? format(arrivalDate, "PPP") : "-"}
+                    </div>
+                  ) : (
+                    <Popover
+                      open={arrivalDateOpen}
+                      onOpenChange={setArrivalDateOpen}
+                    >
+                      <PopoverTrigger asChild>
+                        <button
+                          className={cn(
+                            "flex h-10 w-full rounded-md border border-input items-center cursor-pointer bg-transparent px-3 py-2 text-sm ring-offset-background transition-colors duration-200",
+                            "hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                            "focus:outline-none focus:ring-2 focus:ring-ring",
+                            "disabled:cursor-not-allowed disabled:opacity-50",
+                            "justify-start text-left gap-2",
+                            arrivalDateOpen && "ring-2 ring-ring",
+                            !arrivalDate && "text-muted-foreground"
+                          )}
+                          disabled={datesLocked}
+                          type="button"
+                        >
+                          <CalendarIcon className="h-4 w-4 shrink-0" />
+                          {arrivalDate ? (
+                            format(arrivalDate, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                        </button>
+                      </PopoverTrigger>
+                      {!datesLocked && (
+                        <PopoverContent
+                          className="w-auto p-0 bg-[hsl(var(--color-popover))] border-border"
+                          align="start"
+                        >
+                          <Calendar
+                            mode="single"
+                            selected={arrivalDate}
+                            onSelect={handleArrivalDateChange}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      )}
+                    </Popover>
+                  )}
                 </div>
                 <div className="space-y-3">
                   <Label className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
                     Departure Date
                   </Label>
-                  <Popover
-                    open={departureDateOpen}
-                    onOpenChange={setDepartureDateOpen}
-                  >
-                    <PopoverTrigger asChild>
-                      <button
-                        className={cn(
-                          "flex h-10 w-full rounded-md border border-input items-center cursor-pointer bg-transparent px-3 py-2 text-sm ring-offset-background transition-colors duration-200",
-                          "hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                          "focus:outline-none focus:ring-2 focus:ring-ring",
-                          "disabled:cursor-not-allowed disabled:opacity-50",
-                          "justify-start text-left gap-2",
-                          departureDateOpen && "ring-2 ring-ring",
-                          !departureDate && "text-muted-foreground"
-                        )}
-                        disabled={readOnly || datesLocked}
-                        type="button"
-                      >
-                        <CalendarIcon className="h-4 w-4 shrink-0" />
-                        {departureDate ? (
-                          format(departureDate, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                      </button>
-                    </PopoverTrigger>
-                    {!readOnly && !datesLocked && (
-                      <PopoverContent
-                        className="w-auto p-0 bg-[hsl(var(--color-popover))] border-border"
-                        align="start"
-                      >
-                        <Calendar
-                          mode="single"
-                          selected={departureDate}
-                          onSelect={handleDepartureDateChange}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    )}
-                  </Popover>
+                  {readOnly ? (
+                    <div className="py-2 font-medium text-foreground">
+                      {departureDate ? format(departureDate, "PPP") : "-"}
+                    </div>
+                  ) : (
+                    <Popover
+                      open={departureDateOpen}
+                      onOpenChange={setDepartureDateOpen}
+                    >
+                      <PopoverTrigger asChild>
+                        <button
+                          className={cn(
+                            "flex h-10 w-full rounded-md border border-input items-center cursor-pointer bg-transparent px-3 py-2 text-sm ring-offset-background transition-colors duration-200",
+                            "hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                            "focus:outline-none focus:ring-2 focus:ring-ring",
+                            "disabled:cursor-not-allowed disabled:opacity-50",
+                            "justify-start text-left gap-2",
+                            departureDateOpen && "ring-2 ring-ring",
+                            !departureDate && "text-muted-foreground"
+                          )}
+                          disabled={datesLocked}
+                          type="button"
+                        >
+                          <CalendarIcon className="h-4 w-4 shrink-0" />
+                          {departureDate ? (
+                            format(departureDate, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                        </button>
+                      </PopoverTrigger>
+                      {!datesLocked && (
+                        <PopoverContent
+                          className="w-auto p-0 bg-[hsl(var(--color-popover))] border-border"
+                          align="start"
+                        >
+                          <Calendar
+                            mode="single"
+                            selected={departureDate}
+                            onSelect={handleDepartureDateChange}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      )}
+                    </Popover>
+                  )}
                 </div>
               </div>
             </div>

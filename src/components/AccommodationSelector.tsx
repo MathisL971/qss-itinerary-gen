@@ -10,12 +10,14 @@ interface AccommodationSelectorProps {
   onSelect: (accommodation: Accommodation | null, name: string) => void;
   initialName?: string;
   className?: string;
+  readOnly?: boolean;
 }
 
 export function AccommodationSelector({
   onSelect,
   initialName = "",
   className,
+  readOnly = false,
 }: AccommodationSelectorProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(initialName);
@@ -27,6 +29,7 @@ export function AccommodationSelector({
   }, [initialName]);
 
   useEffect(() => {
+    if (readOnly) return;
     const delayDebounceFn = setTimeout(() => {
       if (searchTerm) {
         searchAccommodations(searchTerm).then(({ data }) => {
@@ -38,20 +41,33 @@ export function AccommodationSelector({
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm]);
+  }, [searchTerm, readOnly]);
 
   const handleSelect = (accommodation: Accommodation) => {
+    if (readOnly) return;
     setSearchTerm(accommodation.name);
     onSelect(accommodation, accommodation.name);
     setOpen(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (readOnly) return;
     const newName = e.target.value;
     setSearchTerm(newName);
     onSelect(null, newName);
     setOpen(true);
   };
+
+  if (readOnly) {
+    return (
+      <div className={cn("relative", className)}>
+        <Label htmlFor="accommodation-search">Accommodation Name</Label>
+        <div className="py-2 font-medium text-foreground">
+          {initialName || "-"}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("relative", className)}>

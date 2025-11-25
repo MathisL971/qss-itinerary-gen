@@ -272,7 +272,8 @@ export async function getUserItineraries(): Promise<{
 
   const { data, error } = await supabase
     .from("itineraries")
-    .select(`
+    .select(
+      `
       *,
       stay:stays(
         client_id,
@@ -282,7 +283,8 @@ export async function getUserItineraries(): Promise<{
         client:clients(name, email),
         accommodation:accommodations(name)
       )
-    `)
+    `
+    )
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -303,7 +305,8 @@ export async function getItineraryById(
   // Get itinerary with stay data
   const { data: itinerary, error: itineraryError } = await supabase
     .from("itineraries")
-    .select(`
+    .select(
+      `
       *,
       stay:stays(
         client_id,
@@ -313,7 +316,8 @@ export async function getItineraryById(
         client:clients(name, email, language),
         accommodation:accommodations(name)
       )
-    `)
+    `
+    )
     .eq("id", itineraryId)
     .eq("user_id", user.id)
     .single();
@@ -354,7 +358,8 @@ export async function getSharedItinerary(
   // The RLS policy "Public can view shared itineraries" should allow this
   const { data: itinerary, error: itineraryError } = await supabase
     .from("itineraries")
-    .select(`
+    .select(
+      `
       *,
       stay:stays(
         client_id,
@@ -364,7 +369,8 @@ export async function getSharedItinerary(
         client:clients(name, email),
         accommodation:accommodations(name)
       )
-    `)
+    `
+    )
     .eq("share_token", shareToken.trim())
     .single();
 

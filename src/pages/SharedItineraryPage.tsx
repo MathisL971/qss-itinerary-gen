@@ -1,28 +1,28 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { ClipLoader } from 'react-spinners';
-import { ItineraryEditor } from '@/components/ItineraryEditor';
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { ClipLoader } from "react-spinners";
+import { ItineraryEditor } from "@/components/ItineraryEditor";
 import {
   getSharedItinerary,
   itemsToDayData,
   type DayData,
-} from '@/lib/itineraryService';
-import { parseLocalDate } from '@/lib/utils';
-import { getTranslations, getClientLanguage, type Language } from '@/lib/i18n';
+} from "@/lib/itineraryService";
+import { parseLocalDate } from "@/lib/utils";
+import { getTranslations, getClientLanguage, type Language } from "@/lib/i18n";
 
 export function SharedItineraryPage() {
   const { token } = useParams();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  const [clientName, setClientName] = useState('');
-  const [villaName, setVillaName] = useState('');
+  const [clientName, setClientName] = useState("");
+  const [villaName, setVillaName] = useState("");
   const [arrivalDate, setArrivalDate] = useState<Date | undefined>(undefined);
   const [departureDate, setDepartureDate] = useState<Date | undefined>(
     undefined
   );
   const [dayData, setDayData] = useState<DayData[]>([]);
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguage] = useState<Language>("en");
   const t = getTranslations(language);
 
   useEffect(() => {
@@ -31,30 +31,32 @@ export function SharedItineraryPage() {
       const decodedToken = decodeURIComponent(token);
       loadSharedItinerary(decodedToken);
     } else {
-      setError('Invalid share link. No token provided.');
+      setError("Invalid share link. No token provided.");
       setLoading(false);
     }
   }, [token]);
 
   const loadSharedItinerary = async (shareToken: string) => {
     setLoading(true);
-    setError('');
+    setError("");
     try {
       const { data, error: err } = await getSharedItinerary(shareToken);
 
       if (err) {
-        console.error('Error loading shared itinerary:', err);
+        console.error("Error loading shared itinerary:", err);
         setError(
-          err.message || 
-          err.details || 
-          'Failed to load shared itinerary. Please check that the link is correct.'
+          err.message ||
+            err.details ||
+            "Failed to load shared itinerary. Please check that the link is correct."
         );
         setLoading(false);
         return;
       }
 
       if (!data) {
-        setError('Shared itinerary not found. The link may be invalid or expired.');
+        setError(
+          "Shared itinerary not found. The link may be invalid or expired."
+        );
         setLoading(false);
         return;
       }
@@ -83,8 +85,8 @@ export function SharedItineraryPage() {
       setDayData(days);
       setLoading(false);
     } catch (err: any) {
-      console.error('Unexpected error loading shared itinerary:', err);
-      setError('An unexpected error occurred. Please try again later.');
+      console.error("Unexpected error loading shared itinerary:", err);
+      setError("An unexpected error occurred. Please try again later.");
       setLoading(false);
     }
   };
@@ -94,7 +96,9 @@ export function SharedItineraryPage() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <ClipLoader color="#1a1a1a" size={48} />
-          <div className="text-muted-foreground font-medium">{t.messages.loading}</div>
+          <div className="text-muted-foreground font-medium">
+            {t.messages.loading}
+          </div>
         </div>
       </div>
     );
@@ -128,4 +132,3 @@ export function SharedItineraryPage() {
     />
   );
 }
-

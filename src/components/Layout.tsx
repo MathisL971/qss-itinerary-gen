@@ -18,7 +18,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <Link
-              to="/itineraries"
+              to="/stays"
               className="flex items-center gap-4 hover:opacity-70 transition-opacity group"
             >
               <img
@@ -33,10 +33,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-6">
               <nav className="hidden md:flex items-center gap-6 mr-4">
                 <Link
-                  to="/itineraries"
+                  to="/stays"
                   className="text-sm font-medium text-muted-foreground hover:text-foreground uppercase tracking-widest transition-colors"
                 >
-                  Itineraries
+                  Stays
                 </Link>
                 <Link
                   to="/clients"

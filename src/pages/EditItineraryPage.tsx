@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
 import { ClipLoader } from "react-spinners";
 import { Layout } from "@/components/Layout";
@@ -7,15 +7,16 @@ import { Button } from "@/components/ui/button";
 import { ItineraryEditor } from "@/components/ItineraryEditor";
 import type { ItineraryEditorData } from "@/components/ItineraryEditor";
 import {
-  getItineraryById,
   updateItinerary,
   createItinerary,
   itemsToDayData,
 } from "@/lib/itineraryService";
+import { getStayById } from "@/lib/stayService";
+import { supabase } from "@/lib/supabase";
+import { parseLocalDate } from "@/lib/utils";
 
 export function EditItineraryPage() {
-  const { id } = useParams();
-  const location = useLocation();
+  const { stayId } = useParams<{ stayId: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -23,54 +24,65 @@ export function EditItineraryPage() {
   const [editorData, setEditorData] = useState<ItineraryEditorData | null>(
     null
   );
-
-  // Determine if we're creating a new itinerary
-  const isNew = location.pathname === "/itineraries/new" || id === "new";
+  const [itineraryId, setItineraryId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isNew) {
-      // New itinerary - initialize with empty data
-      setEditorData({
-        clientName: "",
-        villaName: "",
-        clientId: undefined,
-        accommodationId: undefined,
-        arrivalDate: undefined,
-        departureDate: undefined,
-        dayData: [],
-      });
-      setLoading(false);
-    } else if (id) {
-      // Load existing itinerary
-      loadItinerary(id);
+    if (stayId) {
+      loadStayAndItinerary(stayId);
     } else {
-      // No id and not new - redirect to list
-      navigate("/itineraries", { replace: true });
+      navigate("/stays", { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, isNew, navigate]);
+  }, [stayId]);
 
-  const loadItinerary = async (itineraryId: string) => {
+  const loadStayAndItinerary = async (stayIdParam: string) => {
     setLoading(true);
     setError("");
-    const { data, error: err } = await getItineraryById(itineraryId);
 
-    if (err || !data) {
-      setError(err?.message || "Failed to load itinerary");
+    // Load stay
+    const { data: stay, error: stayErr } = await getStayById(stayIdParam);
+    if (stayErr || !stay) {
+      setError(stayErr?.message || "Failed to load stay");
       setLoading(false);
       return;
     }
 
-    // Convert database format to editor format
-    const arrivalDate = new Date(data.arrival_date);
-    const departureDate = new Date(data.departure_date);
-    const dayData = itemsToDayData(data.items, arrivalDate, departureDate);
+    // Try to find itinerary for this stay
+    const { data: itinerary, error: itineraryError } = await supabase
+      .from("itineraries")
+      .select("*")
+      .eq("stay_id", stayIdParam)
+      .single();
+
+    let dayData: any[] = [];
+    if (!itineraryError && itinerary) {
+      setItineraryId(itinerary.id);
+
+      // Load itinerary items
+      const { data: items } = await supabase
+        .from("itinerary_items")
+        .select("*")
+        .eq("itinerary_id", itinerary.id)
+        .order("day_date", { ascending: true })
+        .order("sort_order", { ascending: true });
+
+      if (items && items.length > 0) {
+        const arrivalDate = parseLocalDate(stay.arrival_date);
+        const departureDate = parseLocalDate(stay.departure_date);
+        dayData = itemsToDayData(items, arrivalDate, departureDate);
+      }
+    }
+
+    // Use stay dates (always from the stay) - parse in local time to avoid timezone issues
+    const arrivalDate = parseLocalDate(stay.arrival_date);
+    const departureDate = parseLocalDate(stay.departure_date);
 
     setEditorData({
-      clientName: data.client_name,
-      villaName: data.villa_name,
-      clientId: data.client_id,
-      accommodationId: data.accommodation_id,
+      clientName: stay.client?.name || "",
+      villaName: stay.accommodation?.name || "",
+      clientId: stay.client_id,
+      accommodationId: stay.accommodation_id,
+      stayId: stay.id,
       arrivalDate,
       departureDate,
       dayData,
@@ -79,40 +91,33 @@ export function EditItineraryPage() {
   };
 
   const handleSave = async () => {
-    if (!editorData) return;
+    if (!editorData || !stayId) return;
 
-    if (
-      !editorData.arrivalDate ||
-      !editorData.departureDate ||
-      !editorData.clientName ||
-      !editorData.villaName
-    ) {
-      setError("Please fill in all required fields");
+    if (!editorData.dayData) {
+      setError("Invalid itinerary data");
       return;
     }
 
     setSaving(true);
     setError("");
 
-    if (isNew) {
+    if (itineraryId) {
+      // Update existing itinerary
+      const { error: err } = await updateItinerary(
+        itineraryId,
+        editorData.dayData
+      );
+
+      if (err) {
+        setError(err.message || "Failed to update itinerary");
+        setSaving(false);
+        return;
+      }
+    } else {
       // Create new itinerary
-      console.log(
-        "Creating itinerary with dayData:",
-        editorData.dayData.length,
-        "days"
-      );
-      console.log(
-        "Total items:",
-        editorData.dayData.reduce((sum, day) => sum + day.items.length, 0)
-      );
       const { data, error: err } = await createItinerary(
-        editorData.clientName,
-        editorData.villaName,
-        editorData.arrivalDate,
-        editorData.departureDate,
-        editorData.dayData,
-        editorData.clientId,
-        editorData.accommodationId
+        stayId,
+        editorData.dayData
       );
 
       if (err || !data) {
@@ -121,28 +126,11 @@ export function EditItineraryPage() {
         return;
       }
 
-      navigate("/itineraries");
-    } else if (id) {
-      // Update existing itinerary
-      const { error: err } = await updateItinerary(
-        id,
-        editorData.clientName,
-        editorData.villaName,
-        editorData.arrivalDate,
-        editorData.departureDate,
-        editorData.dayData,
-        editorData.clientId,
-        editorData.accommodationId
-      );
-
-      if (err) {
-        setError(err.message || "Failed to update itinerary");
-        setSaving(false);
-        return;
-      }
-
-      navigate("/itineraries");
+      setItineraryId(data.id);
     }
+
+    // Navigate back to stay page
+    navigate(`/stays/${stayId}`);
   };
 
   if (loading) {
@@ -176,11 +164,11 @@ export function EditItineraryPage() {
         <div className="flex items-center justify-between">
           <Button
             variant="outline"
-            onClick={() => navigate("/itineraries")}
+            onClick={() => navigate(`/stays/${stayId}`)}
             className="gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Itineraries
+            Back to Stay
           </Button>
           <Button
             onClick={handleSave}
@@ -196,7 +184,7 @@ export function EditItineraryPage() {
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                <span>{isNew ? "Create" : "Save"}</span>
+                <span>Save Itinerary</span>
               </>
             )}
           </Button>
@@ -216,6 +204,8 @@ export function EditItineraryPage() {
           initialArrivalDate={editorData.arrivalDate}
           initialDepartureDate={editorData.departureDate}
           initialDayData={editorData.dayData}
+          datesLocked={true}
+          hideBasicInfo={true}
           onDataChange={setEditorData}
           showHeader={false}
         />

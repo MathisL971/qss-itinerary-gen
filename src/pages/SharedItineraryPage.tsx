@@ -7,6 +7,7 @@ import {
   itemsToDayData,
   type DayData,
 } from '@/lib/itineraryService';
+import { parseLocalDate } from '@/lib/utils';
 
 export function SharedItineraryPage() {
   const { token } = useParams();
@@ -56,12 +57,20 @@ export function SharedItineraryPage() {
       }
 
       // Convert database format to editor format
-      const arrival = new Date(data.arrival_date);
-      const departure = new Date(data.departure_date);
+      // Get dates and names from stay
+      if (!data.stay) {
+        setError("Invalid itinerary: missing stay information");
+        setLoading(false);
+        return;
+      }
+
+      // Parse dates in local time to avoid timezone shift
+      const arrival = parseLocalDate(data.stay.arrival_date);
+      const departure = parseLocalDate(data.stay.departure_date);
       const days = itemsToDayData(data.items, arrival, departure);
 
-      setClientName(data.client_name);
-      setVillaName(data.villa_name);
+      setClientName(data.stay.client?.name || "");
+      setVillaName(data.stay.accommodation?.name || "");
       setArrivalDate(arrival);
       setDepartureDate(departure);
       setDayData(days);

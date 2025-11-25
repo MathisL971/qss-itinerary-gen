@@ -15,15 +15,19 @@ export interface DayData {
 export interface Itinerary {
   id: string;
   user_id: string;
-  client_name: string;
-  villa_name: string;
-  client_id?: string;
-  accommodation_id?: string;
-  arrival_date: string;
-  departure_date: string;
+  stay_id: string;
   share_token: string;
   created_at: string;
   updated_at: string;
+  // Joined data from stay
+  stay?: {
+    client_id: string;
+    accommodation_id: string;
+    arrival_date: string;
+    departure_date: string;
+    client?: { name: string; email: string };
+    accommodation?: { name: string };
+  };
 }
 
 export interface ItineraryItem {
@@ -111,13 +115,8 @@ export function dayDataToItems(
 }
 
 export async function createItinerary(
-  clientName: string,
-  villaName: string,
-  arrivalDate: Date,
-  departureDate: Date,
-  dayData: DayData[],
-  clientId?: string,
-  accommodationId?: string
+  stayId: string,
+  dayData: DayData[]
 ): Promise<{ data: Itinerary | null; error: any }> {
   const {
     data: { user },
@@ -127,19 +126,18 @@ export async function createItinerary(
     return { data: null, error: { message: "User not authenticated" } };
   }
 
+  if (!stayId) {
+    return { data: null, error: { message: "stayId is required" } };
+  }
+
   const shareToken = crypto.randomUUID();
 
-  // Create itinerary
+  // Create itinerary (only stay_id and share_token)
   const { data: itinerary, error: itineraryError } = await supabase
     .from("itineraries")
     .insert({
       user_id: user.id,
-      client_name: clientName,
-      villa_name: villaName,
-      client_id: clientId,
-      accommodation_id: accommodationId,
-      arrival_date: arrivalDate.toISOString().split("T")[0],
-      departure_date: departureDate.toISOString().split("T")[0],
+      stay_id: stayId,
       share_token: shareToken,
     })
     .select()
@@ -181,13 +179,7 @@ export async function createItinerary(
 
 export async function updateItinerary(
   itineraryId: string,
-  clientName: string,
-  villaName: string,
-  arrivalDate: Date,
-  departureDate: Date,
-  dayData: DayData[],
-  clientId?: string,
-  accommodationId?: string
+  dayData: DayData[]
 ): Promise<{ error: any }> {
   const {
     data: { user },
@@ -197,16 +189,10 @@ export async function updateItinerary(
     return { error: { message: "User not authenticated" } };
   }
 
-  // Update itinerary
+  // Update itinerary (only updated_at, stay_id cannot change)
   const { error: itineraryError } = await supabase
     .from("itineraries")
     .update({
-      client_name: clientName,
-      villa_name: villaName,
-      client_id: clientId,
-      accommodation_id: accommodationId,
-      arrival_date: arrivalDate.toISOString().split("T")[0],
-      departure_date: departureDate.toISOString().split("T")[0],
       updated_at: new Date().toISOString(),
     })
     .eq("id", itineraryId)
@@ -286,7 +272,17 @@ export async function getUserItineraries(): Promise<{
 
   const { data, error } = await supabase
     .from("itineraries")
-    .select("*")
+    .select(`
+      *,
+      stay:stays(
+        client_id,
+        accommodation_id,
+        arrival_date,
+        departure_date,
+        client:clients(name, email),
+        accommodation:accommodations(name)
+      )
+    `)
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -304,10 +300,20 @@ export async function getItineraryById(
     return { data: null, error: { message: "User not authenticated" } };
   }
 
-  // Get itinerary
+  // Get itinerary with stay data
   const { data: itinerary, error: itineraryError } = await supabase
     .from("itineraries")
-    .select("*")
+    .select(`
+      *,
+      stay:stays(
+        client_id,
+        accommodation_id,
+        arrival_date,
+        departure_date,
+        client:clients(name, email),
+        accommodation:accommodations(name)
+      )
+    `)
     .eq("id", itineraryId)
     .eq("user_id", user.id)
     .single();
@@ -344,11 +350,21 @@ export async function getSharedItinerary(
     };
   }
 
-  // Get itinerary by share_token (public access - no auth required)
+  // Get itinerary by share_token with stay data (public access - no auth required)
   // The RLS policy "Public can view shared itineraries" should allow this
   const { data: itinerary, error: itineraryError } = await supabase
     .from("itineraries")
-    .select("*")
+    .select(`
+      *,
+      stay:stays(
+        client_id,
+        accommodation_id,
+        arrival_date,
+        departure_date,
+        client:clients(name, email),
+        accommodation:accommodations(name)
+      )
+    `)
     .eq("share_token", shareToken.trim())
     .single();
 

@@ -4,10 +4,11 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { LoginPage } from "@/pages/LoginPage";
 import { SignUpPage } from "@/pages/SignUpPage";
-import { ItinerariesPage } from "@/pages/ItinerariesPage";
-import { EditItineraryPage } from "@/pages/EditItineraryPage";
 import { ClientsPage } from "@/pages/ClientsPage";
 import { AccommodationsPage } from "@/pages/AccommodationsPage";
+import { StaysPage } from "@/pages/StaysPage";
+import { StayDetailPage } from "@/pages/StayDetailPage";
+import { EditItineraryPage } from "@/pages/EditItineraryPage";
 import { SharedItineraryPage } from "@/pages/SharedItineraryPage";
 
 function AppRoutes() {
@@ -30,7 +31,7 @@ function AppRoutes() {
         path="/"
         element={
           user ? (
-            <Navigate to="/itineraries" replace />
+            <Navigate to="/stays" replace />
           ) : (
             <Navigate to="/login" replace />
           )
@@ -39,10 +40,26 @@ function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignUpPage />} />
       <Route
-        path="/itineraries"
+        path="/stays"
         element={
           <ProtectedRoute>
-            <ItinerariesPage />
+            <StaysPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/stays/:id"
+        element={
+          <ProtectedRoute>
+            <StayDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/stays/:stayId/itinerary/edit"
+        element={
+          <ProtectedRoute>
+            <EditItineraryPage />
           </ProtectedRoute>
         }
       />
@@ -62,24 +79,8 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/itineraries/new"
-        element={
-          <ProtectedRoute>
-            <EditItineraryPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/itineraries/:id"
-        element={
-          <ProtectedRoute>
-            <EditItineraryPage />
-          </ProtectedRoute>
-        }
-      />
       <Route path="/share/:token" element={<SharedItineraryPage />} />
-      <Route path="*" element={<Navigate to="/itineraries" replace />} />
+      <Route path="*" element={<Navigate to="/stays" replace />} />
     </Routes>
   );
 }

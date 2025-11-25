@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { Plus, Edit, Trash2, Share2, Check, Download } from "lucide-react";
+import { Plus, Edit, Trash2, Share2, Check, Download, Link as LinkIcon } from "lucide-react";
 import { ClipLoader } from "react-spinners";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -202,8 +202,24 @@ export function ItinerariesPage() {
                         </Button>
                       </div>
                     </div>
-                    <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground tracking-wider uppercase">
-                      {itinerary.villa_name}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground tracking-wider uppercase">
+                        {itinerary.villa_name}
+                      </div>
+                      {itinerary.stay_id && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/stays/${itinerary.stay_id}`);
+                          }}
+                          className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          <LinkIcon className="h-3 w-3 mr-1" />
+                          View Stay
+                        </Button>
+                      )}
                     </div>
                   </div>
 

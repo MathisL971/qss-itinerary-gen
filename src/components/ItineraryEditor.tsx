@@ -38,6 +38,7 @@ export interface ItineraryEditorData {
   villaName: string;
   clientId?: string;
   accommodationId?: string;
+  stayId?: string;
   arrivalDate: Date | undefined;
   departureDate: Date | undefined;
   dayData: DayData[];
@@ -53,6 +54,8 @@ interface ItineraryEditorProps {
   initialDayData?: DayData[];
   readOnly?: boolean;
   showHeader?: boolean;
+  datesLocked?: boolean; // When true, dates are read-only (e.g., when linked to a stay)
+  hideBasicInfo?: boolean; // When true, hide the Basic Information section
   onDataChange?: (data: ItineraryEditorData) => void;
 }
 
@@ -66,6 +69,8 @@ export function ItineraryEditor({
   initialDayData = [],
   readOnly = false,
   showHeader = true,
+  datesLocked = false,
+  hideBasicInfo = false,
   onDataChange,
 }: ItineraryEditorProps) {
   const [clientName, setClientName] = useState(initialClientName);
@@ -265,7 +270,7 @@ export function ItineraryEditor({
 
   // Handle date changes
   const handleArrivalDateChange = (date: Date | undefined) => {
-    if (readOnly) return;
+    if (readOnly || datesLocked) return;
     setArrivalDate(date);
     setArrivalDateOpen(false); // Close popover when date is selected
     if (!date || !departureDate || date > departureDate) {
@@ -274,9 +279,9 @@ export function ItineraryEditor({
   };
 
   const handleDepartureDateChange = (date: Date | undefined) => {
-    if (readOnly) return;
+    if (readOnly || datesLocked) return;
     setDepartureDate(date);
-    setDepartureDateOpen(false); // Close popover when date is selected
+    setArrivalDateOpen(false); // Close popover when date is selected
     if (!date || !arrivalDate || arrivalDate > date) {
       setDayData([]);
     }
@@ -342,7 +347,7 @@ export function ItineraryEditor({
 
   return (
     <div className="app">
-      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         {/* Header Section */}
         {showHeader && (
           <div className="text-center mb-12">
@@ -359,128 +364,130 @@ export function ItineraryEditor({
 
         <form className="space-y-8">
           {/* Basic Info Section */}
-          <div className="space-y-8 border border-border/60 rounded-xl p-8 md:p-10 bg-card shadow-sm hover:shadow-md transition-shadow duration-300">
-            <div className="mb-8 border-b border-border/40 pb-6">
-              <h2 className="text-2xl md:text-3xl font-bold tracking-wide uppercase text-foreground">
-                Basic Information
-              </h2>
-              <p className="text-muted-foreground mt-2 font-light">
-                Enter the key details for this trip
-              </p>
+          {!hideBasicInfo && (
+            <div className="space-y-8 border border-border/60 rounded-xl p-8 md:p-10 bg-card shadow-sm hover:shadow-md transition-shadow duration-300">
+              <div className="mb-8 border-b border-border/40 pb-6">
+                <h2 className="text-2xl md:text-3xl font-bold tracking-wide uppercase text-foreground">
+                  Basic Information
+                </h2>
+                <p className="text-muted-foreground mt-2 font-light">
+                  Enter the key details for this trip
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <ClientSelector
+                    value={clientId}
+                    initialName={clientName}
+                    onSelect={(client, name) => {
+                      setClientName(name);
+                      setClientId(client?.id);
+                    }}
+                  />
+                </div>
+                <div className="space-y-3">
+                  <AccommodationSelector
+                    value={accommodationId}
+                    initialName={villaName}
+                    onSelect={(acc, name) => {
+                      setVillaName(name);
+                      setAccommodationId(acc?.id);
+                    }}
+                  />
+                </div>
+                <div className="space-y-3">
+                  <Label className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+                    Arrival Date
+                  </Label>
+                  <Popover
+                    open={arrivalDateOpen}
+                    onOpenChange={setArrivalDateOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <button
+                        className={cn(
+                          "flex h-10 w-full rounded-md border border-input items-center cursor-pointer bg-transparent px-3 py-2 text-sm ring-offset-background transition-colors duration-200",
+                          "hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          "focus:outline-none focus:ring-2 focus:ring-ring",
+                          "disabled:cursor-not-allowed disabled:opacity-50",
+                          "justify-start text-left gap-2",
+                          arrivalDateOpen && "ring-2 ring-ring",
+                          !arrivalDate && "text-muted-foreground"
+                        )}
+                        disabled={readOnly || datesLocked}
+                        type="button"
+                      >
+                        <CalendarIcon className="h-4 w-4 shrink-0" />
+                        {arrivalDate ? (
+                          format(arrivalDate, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                      </button>
+                    </PopoverTrigger>
+                    {!readOnly && !datesLocked && (
+                      <PopoverContent
+                        className="w-auto p-0 bg-[hsl(var(--color-popover))] border-border"
+                        align="start"
+                      >
+                        <Calendar
+                          mode="single"
+                          selected={arrivalDate}
+                          onSelect={handleArrivalDateChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    )}
+                  </Popover>
+                </div>
+                <div className="space-y-3">
+                  <Label className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+                    Departure Date
+                  </Label>
+                  <Popover
+                    open={departureDateOpen}
+                    onOpenChange={setDepartureDateOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <button
+                        className={cn(
+                          "flex h-10 w-full rounded-md border border-input items-center cursor-pointer bg-transparent px-3 py-2 text-sm ring-offset-background transition-colors duration-200",
+                          "hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          "focus:outline-none focus:ring-2 focus:ring-ring",
+                          "disabled:cursor-not-allowed disabled:opacity-50",
+                          "justify-start text-left gap-2",
+                          departureDateOpen && "ring-2 ring-ring",
+                          !departureDate && "text-muted-foreground"
+                        )}
+                        disabled={readOnly || datesLocked}
+                        type="button"
+                      >
+                        <CalendarIcon className="h-4 w-4 shrink-0" />
+                        {departureDate ? (
+                          format(departureDate, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                      </button>
+                    </PopoverTrigger>
+                    {!readOnly && !datesLocked && (
+                      <PopoverContent
+                        className="w-auto p-0 bg-[hsl(var(--color-popover))] border-border"
+                        align="start"
+                      >
+                        <Calendar
+                          mode="single"
+                          selected={departureDate}
+                          onSelect={handleDepartureDateChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    )}
+                  </Popover>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-3">
-                <ClientSelector
-                  value={clientId}
-                  initialName={clientName}
-                  onSelect={(client, name) => {
-                    setClientName(name);
-                    setClientId(client?.id);
-                  }}
-                />
-              </div>
-              <div className="space-y-3">
-                <AccommodationSelector
-                  value={accommodationId}
-                  initialName={villaName}
-                  onSelect={(acc, name) => {
-                    setVillaName(name);
-                    setAccommodationId(acc?.id);
-                  }}
-                />
-              </div>
-              <div className="space-y-3">
-                <Label className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
-                  Arrival Date
-                </Label>
-                <Popover
-                  open={arrivalDateOpen}
-                  onOpenChange={setArrivalDateOpen}
-                >
-                  <PopoverTrigger asChild>
-                    <button
-                      className={cn(
-                        "flex h-10 w-full rounded-md border border-input items-center cursor-pointer bg-transparent px-3 py-2 text-sm ring-offset-background transition-colors duration-200",
-                        "hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                        "focus:outline-none focus:ring-2 focus:ring-ring",
-                        "disabled:cursor-not-allowed disabled:opacity-50",
-                        "justify-start text-left gap-2",
-                        arrivalDateOpen && "ring-2 ring-ring",
-                        !arrivalDate && "text-muted-foreground"
-                      )}
-                      disabled={readOnly}
-                      type="button"
-                    >
-                      <CalendarIcon className="h-4 w-4 shrink-0" />
-                      {arrivalDate ? (
-                        format(arrivalDate, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </button>
-                  </PopoverTrigger>
-                  {!readOnly && (
-                    <PopoverContent
-                      className="w-auto p-0 bg-[hsl(var(--color-popover))] border-border"
-                      align="start"
-                    >
-                      <Calendar
-                        mode="single"
-                        selected={arrivalDate}
-                        onSelect={handleArrivalDateChange}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  )}
-                </Popover>
-              </div>
-              <div className="space-y-3">
-                <Label className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
-                  Departure Date
-                </Label>
-                <Popover
-                  open={departureDateOpen}
-                  onOpenChange={setDepartureDateOpen}
-                >
-                  <PopoverTrigger asChild>
-                    <button
-                      className={cn(
-                        "flex h-10 w-full rounded-md border border-input items-center cursor-pointer bg-transparent px-3 py-2 text-sm ring-offset-background transition-colors duration-200",
-                        "hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                        "focus:outline-none focus:ring-2 focus:ring-ring",
-                        "disabled:cursor-not-allowed disabled:opacity-50",
-                        "justify-start text-left gap-2",
-                        departureDateOpen && "ring-2 ring-ring",
-                        !departureDate && "text-muted-foreground"
-                      )}
-                      disabled={readOnly}
-                      type="button"
-                    >
-                      <CalendarIcon className="h-4 w-4 shrink-0" />
-                      {departureDate ? (
-                        format(departureDate, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </button>
-                  </PopoverTrigger>
-                  {!readOnly && (
-                    <PopoverContent
-                      className="w-auto p-0 bg-[hsl(var(--color-popover))] border-border"
-                      align="start"
-                    >
-                      <Calendar
-                        mode="single"
-                        selected={departureDate}
-                        onSelect={handleDepartureDateChange}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  )}
-                </Popover>
-              </div>
-            </div>
-          </div>
+          )}
 
           {/* Itinerary Breakdown Section */}
           {arrivalDate && departureDate && dayData.length > 0 && (

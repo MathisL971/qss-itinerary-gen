@@ -27,7 +27,7 @@ export function LoginPage() {
       setError(error.message || "Failed to sign in");
       setLoading(false);
     } else {
-      navigate("/itineraries");
+      navigate("/stays");
     }
   };
 

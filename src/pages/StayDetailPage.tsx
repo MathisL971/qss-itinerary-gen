@@ -73,10 +73,9 @@ export function StayDetailPage() {
       // Use stay dates (always from the stay) - parse in local time to avoid timezone issues
       const arrivalDate = parseLocalDate(data.arrival_date);
       const departureDate = parseLocalDate(data.departure_date);
-      const dayData =
-        items && items.length > 0
-          ? itemsToDayData(items, arrivalDate, departureDate)
-          : [];
+      // Always generate dayData from dates, even if there are no items
+      // itemsToDayData will create empty days if items array is empty
+      const dayData = itemsToDayData(items || [], arrivalDate, departureDate);
 
       setItineraryData({
         clientName: data.client?.name || "",
@@ -89,9 +88,11 @@ export function StayDetailPage() {
         dayData,
       });
     } else {
-      // No itinerary exists yet - create empty one
+      // No itinerary exists yet - create empty one with days generated from dates
       const arrivalDate = parseLocalDate(data.arrival_date);
       const departureDate = parseLocalDate(data.departure_date);
+      // Generate empty dayData from dates so PDF can be exported
+      const dayData = itemsToDayData([], arrivalDate, departureDate);
       setItineraryData({
         clientName: data.client?.name || "",
         villaName: data.accommodation?.name || "",
@@ -100,7 +101,7 @@ export function StayDetailPage() {
         stayId: data.id,
         arrivalDate,
         departureDate,
-        dayData: [],
+        dayData,
       });
     }
 
@@ -116,13 +117,37 @@ export function StayDetailPage() {
   };
 
   const handleExportPDF = async () => {
-    if (
-      !itineraryData ||
-      !stay ||
-      !itineraryData.arrivalDate ||
-      !itineraryData.departureDate
-    )
+    if (!itineraryData) {
+      console.error("No itinerary data available");
+      alert(
+        "No itinerary data available. Please ensure the stay has an itinerary."
+      );
       return;
+    }
+
+    if (!stay) {
+      console.error("No stay data available");
+      alert("No stay data available.");
+      return;
+    }
+
+    if (!itineraryData.arrivalDate || !itineraryData.departureDate) {
+      console.error("Missing dates", {
+        arrivalDate: itineraryData.arrivalDate,
+        departureDate: itineraryData.departureDate,
+      });
+      alert(
+        "Missing arrival or departure date. Please check the stay details."
+      );
+      return;
+    }
+
+    if (!itineraryData.dayData || itineraryData.dayData.length === 0) {
+      console.warn(
+        "No day data available, but proceeding with empty itinerary"
+      );
+      // Allow PDF generation even with empty dayData - the PDF generator handles this
+    }
 
     try {
       setGeneratingPDF(true);
@@ -131,11 +156,16 @@ export function StayDetailPage() {
         stay.accommodation?.name || itineraryData.villaName,
         itineraryData.arrivalDate,
         itineraryData.departureDate,
-        itineraryData.dayData
+        itineraryData.dayData || [],
+        stay.client?.language
       );
     } catch (error) {
       console.error("Error exporting PDF:", error);
-      alert("Failed to export PDF. Please try again.");
+      alert(
+        `Failed to export PDF: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     } finally {
       setGeneratingPDF(false);
     }

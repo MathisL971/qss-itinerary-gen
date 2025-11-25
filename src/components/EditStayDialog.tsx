@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -91,6 +92,9 @@ export function EditStayDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Stay</DialogTitle>
+          <DialogDescription>
+            Update the stay details including dates, status, and notes.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

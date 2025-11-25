@@ -10,7 +10,7 @@ export interface Stay {
   notes: string;
   created_at: string;
   updated_at: string;
-  client?: { name: string; email: string };
+  client?: { name: string; email: string; language?: string };
   accommodation?: { name: string };
 }
 
@@ -19,7 +19,7 @@ export async function getStays() {
     .from("stays")
     .select(`
       *,
-      client:clients(name, email),
+      client:clients(name, email, language),
       accommodation:accommodations(name)
     `)
     .order("arrival_date", { ascending: true });
@@ -32,7 +32,7 @@ export async function getStayById(id: string) {
     .from("stays")
     .select(`
       *,
-      client:clients(name, email),
+      client:clients(name, email, language),
       accommodation:accommodations(name)
     `)
     .eq("id", id)

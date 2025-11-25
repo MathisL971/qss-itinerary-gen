@@ -25,7 +25,7 @@ export interface Itinerary {
     accommodation_id: string;
     arrival_date: string;
     departure_date: string;
-    client?: { name: string; email: string };
+    client?: { name: string; email: string; language?: string };
     accommodation?: { name: string };
   };
 }
@@ -310,7 +310,7 @@ export async function getItineraryById(
         accommodation_id,
         arrival_date,
         departure_date,
-        client:clients(name, email),
+        client:clients(name, email, language),
         accommodation:accommodations(name)
       )
     `)

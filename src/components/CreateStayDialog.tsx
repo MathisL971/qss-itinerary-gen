@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -109,6 +110,9 @@ export function CreateStayDialog({ onStayCreated }: CreateStayDialogProps) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create New Stay</DialogTitle>
+          <DialogDescription>
+            Create a new stay record with client, accommodation, dates, and status information.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

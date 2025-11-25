@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -64,6 +65,9 @@ export function CreateAccommodationDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add New Accommodation</DialogTitle>
+          <DialogDescription>
+            Add a new accommodation property with its type and capacity information.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

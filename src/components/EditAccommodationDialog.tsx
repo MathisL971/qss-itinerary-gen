@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,9 @@ export function EditAccommodationDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Accommodation</DialogTitle>
+          <DialogDescription>
+            Update the accommodation's name, type, and capacity information.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

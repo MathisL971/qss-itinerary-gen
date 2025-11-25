@@ -102,28 +102,116 @@ export function ItineraryEditor({
   const isUpdatingFromPropsRef = React.useRef(false);
   // Track last data sent to parent to avoid unnecessary updates
   const lastSentDataRef = React.useRef<ItineraryEditorData | null>(null);
+  // Track previous prop values to compare by value, not reference
+  const prevPropsRef = React.useRef({
+    initialClientName,
+    initialVillaName,
+    initialClientId,
+    initialAccommodationId,
+    initialArrivalDate,
+    initialDepartureDate,
+    initialDayData,
+  });
 
-  // Update state when props change
+  // Helper function to compare dates by value
+  const areDatesEqual = (
+    a: Date | undefined,
+    b: Date | undefined
+  ): boolean => {
+    if (a === b) return true;
+    if (!a || !b) return false;
+    return a.getTime() === b.getTime();
+  };
+
+  // Helper function to compare dayData arrays by value
+  const areDayDataEqual = (a: DayData[], b: DayData[]): boolean => {
+    if (a.length !== b.length) return false;
+    return a.every((dayA, index) => {
+      const dayB = b[index];
+      if (!dayB) return false;
+      if (dayA.date.toISOString() !== dayB.date.toISOString()) return false;
+      if (dayA.items.length !== dayB.items.length) return false;
+      return dayA.items.every((itemA, itemIndex) => {
+        const itemB = dayB.items[itemIndex];
+        if (!itemB) return false;
+        return (
+          itemA.id === itemB.id &&
+          itemA.time === itemB.time &&
+          itemA.event === itemB.event &&
+          itemA.location === itemB.location
+        );
+      });
+    });
+  };
+
+  // Update state when props change (only if values actually changed)
   useEffect(() => {
+    const prev = prevPropsRef.current;
+    
+    // Check if any prop values actually changed
+    const clientNameChanged = prev.initialClientName !== initialClientName;
+    const villaNameChanged = prev.initialVillaName !== initialVillaName;
+    const clientIdChanged = prev.initialClientId !== initialClientId;
+    const accommodationIdChanged =
+      prev.initialAccommodationId !== initialAccommodationId;
+    const arrivalDateChanged = !areDatesEqual(
+      prev.initialArrivalDate,
+      initialArrivalDate
+    );
+    const departureDateChanged = !areDatesEqual(
+      prev.initialDepartureDate,
+      initialDepartureDate
+    );
+    const dayDataChanged = !areDayDataEqual(
+      prev.initialDayData,
+      initialDayData
+    );
+
+    // Only update if something actually changed
+    if (
+      !clientNameChanged &&
+      !villaNameChanged &&
+      !clientIdChanged &&
+      !accommodationIdChanged &&
+      !arrivalDateChanged &&
+      !departureDateChanged &&
+      !dayDataChanged
+    ) {
+      return; // No changes, skip update
+    }
+
     isUpdatingFromPropsRef.current = true;
-    setClientName(initialClientName);
-    setVillaName(initialVillaName);
-    setClientId(initialClientId);
-    setAccommodationId(initialAccommodationId);
-    setArrivalDate(initialArrivalDate);
-    setDepartureDate(initialDepartureDate);
+
+    if (clientNameChanged) setClientName(initialClientName);
+    if (villaNameChanged) setVillaName(initialVillaName);
+    if (clientIdChanged) setClientId(initialClientId);
+    if (accommodationIdChanged) setAccommodationId(initialAccommodationId);
+    if (arrivalDateChanged) setArrivalDate(initialArrivalDate);
+    if (departureDateChanged) setDepartureDate(initialDepartureDate);
 
     // Only update dayData from props if it has items, or if dates are invalid
     // Otherwise, let the day generation effect handle it
     const hasItems = initialDayData.some((day) => day.items.length > 0);
     if (
-      hasItems ||
-      !initialArrivalDate ||
-      !initialDepartureDate ||
-      initialDepartureDate < initialArrivalDate
+      dayDataChanged &&
+      (hasItems ||
+        !initialArrivalDate ||
+        !initialDepartureDate ||
+        initialDepartureDate < initialArrivalDate)
     ) {
       setDayData(initialDayData);
     }
+
+    // Update ref with current values
+    prevPropsRef.current = {
+      initialClientName,
+      initialVillaName,
+      initialClientId,
+      initialAccommodationId,
+      initialArrivalDate,
+      initialDepartureDate,
+      initialDayData,
+    };
 
     // Use requestAnimationFrame to reset flag after React finishes updating
     requestAnimationFrame(() => {

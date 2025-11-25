@@ -8,6 +8,7 @@ import {
   type DayData,
 } from '@/lib/itineraryService';
 import { parseLocalDate } from '@/lib/utils';
+import { getTranslations, getClientLanguage, type Language } from '@/lib/i18n';
 
 export function SharedItineraryPage() {
   const { token } = useParams();
@@ -21,6 +22,8 @@ export function SharedItineraryPage() {
     undefined
   );
   const [dayData, setDayData] = useState<DayData[]>([]);
+  const [language, setLanguage] = useState<Language>('en');
+  const t = getTranslations(language);
 
   useEffect(() => {
     if (token) {
@@ -69,6 +72,10 @@ export function SharedItineraryPage() {
       const departure = parseLocalDate(data.stay.departure_date);
       const days = itemsToDayData(data.items, arrival, departure);
 
+      // Get client language
+      const clientLang = getClientLanguage(data.stay.client?.language);
+      setLanguage(clientLang);
+
       setClientName(data.stay.client?.name || "");
       setVillaName(data.stay.accommodation?.name || "");
       setArrivalDate(arrival);
@@ -87,7 +94,7 @@ export function SharedItineraryPage() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <ClipLoader color="#1a1a1a" size={48} />
-          <div className="text-muted-foreground font-medium">Loading shared itinerary...</div>
+          <div className="text-muted-foreground font-medium">{t.messages.loading}</div>
         </div>
       </div>
     );
@@ -98,11 +105,11 @@ export function SharedItineraryPage() {
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="max-w-md w-full text-center">
           <div className="text-destructive text-lg font-semibold mb-2">
-            Error Loading Shared Itinerary
+            {t.messages.errorLoading}
           </div>
           <div className="text-muted-foreground">{error}</div>
           <div className="mt-4 text-sm text-muted-foreground">
-            Please verify that you copied the complete link and try again.
+            {t.messages.verifyLink}
           </div>
         </div>
       </div>

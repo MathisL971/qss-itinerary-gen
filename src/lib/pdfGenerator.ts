@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import { format } from "date-fns";
 import type { DayData } from "./itineraryService";
+import { getTranslations, getClientLanguage } from "./i18n";
 
 // Helper function to format time (e.g., "14:30" -> "2:30pm")
 function formatTimeForPDF(time: string): string {
@@ -37,11 +38,25 @@ export async function generatePDF(
   villaName: string,
   arrivalDate: Date,
   departureDate: Date,
-  dayData: DayData[]
+  dayData: DayData[],
+  clientLanguage?: string | null
 ): Promise<void> {
-  if (!arrivalDate || !departureDate || dayData.length === 0) {
-    return;
+  if (!arrivalDate || !departureDate) {
+    console.error("Missing dates for PDF generation", {
+      arrivalDate,
+      departureDate,
+    });
+    throw new Error("Arrival and departure dates are required to generate PDF");
   }
+
+  // Allow PDF generation even with empty dayData - we'll show "no items" for each day
+  if (!dayData || dayData.length === 0) {
+    console.warn("No day data provided, generating PDF with empty itinerary");
+  }
+
+  // Get translations based on client language
+  const language = getClientLanguage(clientLanguage);
+  const t = getTranslations(language);
 
   // Load logo image and convert to base64, get dimensions
   let logoDataUrl = "";
@@ -216,10 +231,10 @@ export async function generatePDF(
 
   // Labels
   const labelSpacing = contentWidth / 4;
-  doc.text("CLIENT", margin, labelY);
-  doc.text("VILLA", margin + labelSpacing, labelY);
-  doc.text("ARRIVAL", margin + labelSpacing * 2, labelY);
-  doc.text("DEPARTURE", margin + labelSpacing * 3, labelY);
+  doc.text(t.labels.client, margin, labelY);
+  doc.text(t.labels.villa, margin + labelSpacing, labelY);
+  doc.text(t.labels.arrival, margin + labelSpacing * 2, labelY);
+  doc.text(t.labels.departure, margin + labelSpacing * 3, labelY);
 
   // Black line
   doc.setDrawColor(blackR, blackG, blackB);
@@ -238,9 +253,7 @@ export async function generatePDF(
     yPosition
   );
   doc.text(
-    departureDate
-      ? format(departureDate, "MMM d, yyyy").toUpperCase()
-      : "XXX",
+    departureDate ? format(departureDate, "MMM d, yyyy").toUpperCase() : "XXX",
     margin + labelSpacing * 3,
     yPosition
   );
@@ -251,7 +264,9 @@ export async function generatePDF(
   doc.setFontSize(fontSize + 2);
   doc.setFont(fontFamily, "bold");
   doc.setTextColor(blackR, blackG, blackB);
-  doc.text("YOUR ITINERARY", pageWidth / 2, yPosition, { align: "center" });
+  doc.text(t.labels.yourItinerary, pageWidth / 2, yPosition, {
+    align: "center",
+  });
   yPosition += 15;
 
   // Iterate through each day
@@ -274,7 +289,7 @@ export async function generatePDF(
       doc.setFontSize(fontSize);
       doc.setFont(fontFamily, "italic");
       doc.setTextColor(blackR, blackG, blackB);
-      doc.text("No items added for this day", margin, yPosition);
+      doc.text(t.labels.noItemsForDay, margin, yPosition);
       yPosition += 10;
     } else {
       // Table headers: TIME, EVENT, LOCATION
@@ -289,9 +304,9 @@ export async function generatePDF(
       const eventColX = tableLeft + 35;
       const locationColX = tableLeft + 120;
 
-      doc.text("TIME", timeColX, yPosition);
-      doc.text("EVENT", eventColX, yPosition);
-      doc.text("LOCATION", locationColX, yPosition);
+      doc.text(t.labels.time, timeColX, yPosition);
+      doc.text(t.labels.event, eventColX, yPosition);
+      doc.text(t.labels.location, locationColX, yPosition);
 
       // Black line under headers
       const headerLineY = yPosition + 1;
@@ -370,7 +385,7 @@ export async function generatePDF(
   doc.setFontSize(fontSize);
   doc.setFont(fontFamily, "bold");
   doc.setTextColor(blackR, blackG, blackB);
-  doc.text("CANCELLATION AND DELAYS POLICIES", pageWidth / 2, yPosition, {
+  doc.text(t.labels.cancellationAndDelaysPolicies, pageWidth / 2, yPosition, {
     align: "center",
   });
   yPosition += 12;
@@ -379,8 +394,7 @@ export async function generatePDF(
   doc.setFontSize(fontSize);
   doc.setFont(fontFamily, "normal");
   doc.setTextColor(blackR, blackG, blackB);
-  const generalPolicyText =
-    "All reservations must be canceled at least 24 to 48 hours in advance to avoid penalty fees. Some establishments also offer a courtesy delay of 15 to 30 minutes. Beyond this grace period, tables may be reassigned, and cancellation fees will apply.";
+  const generalPolicyText = t.policies.generalPolicy;
   const generalPolicyLines = doc.splitTextToSize(
     generalPolicyText,
     pageWidth - 2 * margin
@@ -392,7 +406,7 @@ export async function generatePDF(
   doc.setFontSize(fontSize);
   doc.setFont(fontFamily, "bold");
   doc.setTextColor(blackR, blackG, blackB);
-  doc.text("Fee Details and Specific Policies:", margin, yPosition);
+  doc.text(t.labels.feeDetailsAndSpecificPolicies, margin, yPosition);
   yPosition += 6;
 
   // Bulleted list of policies
@@ -401,12 +415,12 @@ export async function generatePDF(
   doc.setTextColor(blackR, blackG, blackB);
 
   const policies = [
-    "ISOLA: €250 per person fee.",
-    "SHELLONA: €250 per person fee, with a 30-minute courtesy policy.",
-    "TAMARIN: €150 per person fee.",
-    "LA GUÉRITE: €250 per person fee.",
-    "MAMO: €260 per person fee.",
-    "GYPSEA: 48 HOURS CANCELLATION POLICY - €220 per person fee, with a 15-minute courtesy policy.",
+    t.policies.establishments.isola,
+    t.policies.establishments.shellona,
+    t.policies.establishments.tamarin,
+    t.policies.establishments.guerite,
+    t.policies.establishments.mamo,
+    t.policies.establishments.gypsea,
   ];
 
   policies.forEach((policy) => {
@@ -415,16 +429,21 @@ export async function generatePDF(
     const textX = margin + 10;
     doc.text("•", bulletX, yPosition);
 
-    // Handle GYPSEA special formatting
-    if (policy.includes("48 HOURS CANCELLATION POLICY")) {
-      const parts = policy.split("48 HOURS CANCELLATION POLICY");
+    // Handle GYPSEA special formatting (check for French or English version)
+    const gypseaBoldText =
+      language === "fr"
+        ? "POLITIQUE D'ANNULATION DE 48 HEURES"
+        : "48 HOURS CANCELLATION POLICY";
+
+    if (policy.includes(gypseaBoldText)) {
+      const parts = policy.split(gypseaBoldText);
       doc.setFont(fontFamily, "normal");
       doc.text("GYPSEA: ", textX, yPosition);
       const textWidth = doc.getTextWidth("GYPSEA: ");
       doc.setFont(fontFamily, "bolditalic");
-      doc.text("48 HOURS CANCELLATION POLICY", textX + textWidth, yPosition);
+      doc.text(gypseaBoldText, textX + textWidth, yPosition);
       doc.setFont(fontFamily, "normal");
-      const boldTextWidth = doc.getTextWidth("48 HOURS CANCELLATION POLICY");
+      const boldTextWidth = doc.getTextWidth(gypseaBoldText);
       const remainingText = parts[1];
       const remainingLines = doc.splitTextToSize(
         remainingText,
@@ -461,14 +480,13 @@ export async function generatePDF(
   doc.setFontSize(fontSize);
   doc.setFont(fontFamily, "bold");
   doc.setTextColor(blackR, blackG, blackB);
-  doc.text("For GYPSEA:", margin, yPosition);
+  doc.text(t.labels.forGypsea, margin, yPosition);
   yPosition += 6;
 
   doc.setFontSize(fontSize);
   doc.setFont(fontFamily, "normal");
   doc.setTextColor(blackR, blackG, blackB);
-  const gypseaText =
-    "Beach beds cannot be pre-confirmed as priority is given to hotel guests. A note has been added to your reservation, and the team will contact you in the morning to reconfirm. Once confirmed, arrival must occur between 10:30 AM and 12:30 PM. If not, the chairs will be released.";
+  const gypseaText = t.policies.gypseaPolicy;
   const gypseaLines = doc.splitTextToSize(gypseaText, pageWidth - 2 * margin);
   doc.text(gypseaLines, margin, yPosition);
   yPosition += gypseaLines.length * 4 + 5;
@@ -478,22 +496,34 @@ export async function generatePDF(
   doc.setFontSize(fontSize);
   doc.setFont(fontFamily, "bold");
   doc.setTextColor(blackR, blackG, blackB);
-  doc.text("NAILS by Romane:", margin, yPosition);
+  doc.text(t.labels.nailsByRomane, margin, yPosition);
   yPosition += 6;
 
   doc.setFontSize(fontSize);
   doc.setFont(fontFamily, "normal");
   doc.setTextColor(blackR, blackG, blackB);
-  const nailsText =
-    "Modifications or cancellations must be communicated at least 24 hours in advance of the scheduled appointment. Otherwise, a cancellation fee of 100% will apply.";
+  const nailsText = t.policies.nailsPolicy;
   const nailsLines = doc.splitTextToSize(nailsText, pageWidth - 2 * margin);
   doc.text(nailsLines, margin, yPosition);
 
   // Add page numbers to all pages
-  const totalPages = doc.internal.pages.length;
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-    drawPageNumber(i);
+  // Get the current page count right before drawing to ensure accuracy
+  // In jsPDF, doc.internal.pages is an array where index 0 is metadata/configuration
+  // and indices 1+ are actual pages (1-indexed in the PDF)
+  // So totalPages = length - 1
+  const totalPages = Math.max(1, doc.internal.pages.length - 1);
+
+  // Draw page numbers on each page
+  // Use a try-catch to prevent drawing on non-existent pages
+  for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+    try {
+      doc.setPage(pageNum);
+      drawPageNumber(pageNum);
+    } catch (error) {
+      // If setting the page fails, skip it to avoid drawing on wrong page
+      console.warn(`Could not set page ${pageNum} for numbering:`, error);
+      break; // Stop if we hit an invalid page
+    }
   }
 
   // Generate filename
@@ -507,7 +537,3 @@ export async function generatePDF(
   // Save the PDF
   doc.save(filename);
 }
-
-
-
-

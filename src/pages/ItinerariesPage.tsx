@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { Plus, Edit, Trash2, Share2, Check, Download, Link as LinkIcon } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Share2,
+  Check,
+  Download,
+  Link as LinkIcon,
+} from "lucide-react";
 import { ClipLoader } from "react-spinners";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -14,6 +22,7 @@ import {
   type Itinerary,
 } from "@/lib/itineraryService";
 import { generatePDF } from "@/lib/pdfGenerator";
+import { parseLocalDate } from "@/lib/utils";
 
 export function ItinerariesPage() {
   const [itineraries, setItineraries] = useState<Itinerary[]>([]);
@@ -64,6 +73,8 @@ export function ItinerariesPage() {
 
   const handleExportPDF = async (itineraryId: string) => {
     try {
+      console.log("Exporting PDF for itinerary:", itineraryId);
+
       setGeneratingPDF(itineraryId);
 
       const { data, error } = await getItineraryById(itineraryId);
@@ -74,16 +85,27 @@ export function ItinerariesPage() {
         return;
       }
 
-      const arrivalDate = new Date(data.arrival_date);
-      const departureDate = new Date(data.departure_date);
+      // Get dates from stay (required - all itineraries must have a stay)
+      if (!data.stay?.arrival_date || !data.stay?.departure_date) {
+        alert("Invalid itinerary: missing stay information");
+        return;
+      }
+
+      const arrivalDate = parseLocalDate(data.stay.arrival_date);
+      const departureDate = parseLocalDate(data.stay.departure_date);
       const dayData = itemsToDayData(data.items, arrivalDate, departureDate);
 
+      const clientName = data.stay?.client?.name || "";
+      const villaName = data.stay?.accommodation?.name || "";
+      const clientLanguage = data.stay?.client?.language;
+
       await generatePDF(
-        data.client_name,
-        data.villa_name,
+        clientName,
+        villaName,
         arrivalDate,
         departureDate,
-        dayData
+        dayData,
+        clientLanguage
       );
     } catch (error) {
       console.error("Error exporting PDF:", error);
@@ -164,13 +186,11 @@ export function ItinerariesPage() {
                 key={itinerary.id}
                 className="group relative border border-border/60 rounded-xl p-6 bg-card hover:bg-card/80 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
               >
-                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-foreground/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
                 <div className="space-y-6">
                   <div>
                     <div className="flex items-start justify-between mb-4">
                       <h3 className="text-2xl font-bold tracking-wide uppercase pr-4 leading-tight">
-                        {itinerary.client_name || "Untitled"}
+                        {itinerary.stay?.client?.name || "Untitled"}
                       </h3>
                       <div className="flex gap-1">
                         <Button
@@ -204,7 +224,7 @@ export function ItinerariesPage() {
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-secondary text-secondary-foreground tracking-wider uppercase">
-                        {itinerary.villa_name}
+                        {itinerary.stay?.accommodation?.name || "-"}
                       </div>
                       {itinerary.stay_id && (
                         <Button
@@ -228,23 +248,47 @@ export function ItinerariesPage() {
                       <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-1">
                         Arrival
                       </span>
-                      <span className="text-lg">
-                        {format(new Date(itinerary.arrival_date), "MMM d")}
-                      </span>
-                      <span className="text-xs text-muted-foreground ml-1">
-                        {format(new Date(itinerary.arrival_date), "yyyy")}
-                      </span>
+                      {itinerary.stay?.arrival_date ? (
+                        <>
+                          <span className="text-lg">
+                            {format(
+                              parseLocalDate(itinerary.stay.arrival_date),
+                              "MMM d"
+                            )}
+                          </span>
+                          <span className="text-xs text-muted-foreground ml-1">
+                            {format(
+                              parseLocalDate(itinerary.stay.arrival_date),
+                              "yyyy"
+                            )}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-lg text-muted-foreground">-</span>
+                      )}
                     </div>
                     <div className="text-right">
                       <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-1">
                         Departure
                       </span>
-                      <span className="text-lg">
-                        {format(new Date(itinerary.departure_date), "MMM d")}
-                      </span>
-                      <span className="text-xs text-muted-foreground ml-1">
-                        {format(new Date(itinerary.departure_date), "yyyy")}
-                      </span>
+                      {itinerary.stay?.departure_date ? (
+                        <>
+                          <span className="text-lg">
+                            {format(
+                              parseLocalDate(itinerary.stay.departure_date),
+                              "MMM d"
+                            )}
+                          </span>
+                          <span className="text-xs text-muted-foreground ml-1">
+                            {format(
+                              parseLocalDate(itinerary.stay.departure_date),
+                              "yyyy"
+                            )}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-lg text-muted-foreground">-</span>
+                      )}
                     </div>
                   </div>
 

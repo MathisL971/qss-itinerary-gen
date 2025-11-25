@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/clientService";
 import { Plus, Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CreateClientDialogProps {
   onClientCreated: () => void;
@@ -24,13 +32,14 @@ export function CreateClientDialog({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [language, setLanguage] = useState<"en" | "fr">("en");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name) return;
 
     setLoading(true);
-    const { error } = await createClient({ name, email, phone });
+    const { error } = await createClient({ name, email, phone, language });
     setLoading(false);
 
     if (!error) {
@@ -38,6 +47,7 @@ export function CreateClientDialog({
       setName("");
       setEmail("");
       setPhone("");
+      setLanguage("en");
       onClientCreated();
     }
   };
@@ -53,6 +63,10 @@ export function CreateClientDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add New Client</DialogTitle>
+          <DialogDescription>
+            Create a new client profile with their contact information and
+            language preference.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -83,6 +97,21 @@ export function CreateClientDialog({
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+1 234 567 890"
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="language">Language</Label>
+            <Select
+              value={language}
+              onValueChange={(value: "en" | "fr") => setLanguage(value)}
+            >
+              <SelectTrigger id="language">
+                <SelectValue placeholder="Select language" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="fr">Français</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex justify-end gap-2 pt-4">
             <Button

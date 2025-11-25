@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateClient, type Client } from "@/lib/clientService";
 import { Pencil, Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface EditClientDialogProps {
   client: Client;
@@ -26,11 +34,15 @@ export function EditClientDialog({
   const [name, setName] = useState(client.name);
   const [email, setEmail] = useState(client.email || "");
   const [phone, setPhone] = useState(client.phone || "");
+  const [language, setLanguage] = useState<"en" | "fr">(
+    client.language || "en"
+  );
 
   useEffect(() => {
     setName(client.name);
     setEmail(client.email || "");
     setPhone(client.phone || "");
+    setLanguage(client.language || "en");
   }, [client]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,7 +50,12 @@ export function EditClientDialog({
     if (!name) return;
 
     setLoading(true);
-    const { error } = await updateClient(client.id, { name, email, phone });
+    const { error } = await updateClient(client.id, {
+      name,
+      email,
+      phone,
+      language,
+    });
     setLoading(false);
 
     if (!error) {
@@ -58,6 +75,9 @@ export function EditClientDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Client</DialogTitle>
+          <DialogDescription>
+            Update the client's information and preferences.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -89,6 +109,21 @@ export function EditClientDialog({
               placeholder="+1 234 567 890"
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-language">Language</Label>
+            <Select
+              value={language}
+              onValueChange={(value: "en" | "fr") => setLanguage(value)}
+            >
+              <SelectTrigger id="edit-language">
+                <SelectValue placeholder="Select language" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="fr">Français</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex justify-end gap-2 pt-4">
             <Button
               type="button"
@@ -107,4 +142,3 @@ export function EditClientDialog({
     </Dialog>
   );
 }
-

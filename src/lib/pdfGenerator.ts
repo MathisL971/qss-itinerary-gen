@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import { format } from "date-fns";
 import type { DayData } from "./itineraryService";
+import { extractPolicies } from "./itineraryService";
 import { getTranslations, getClientLanguage } from "./i18n";
 
 // Helper function to format time (e.g., "14:30" -> "2:30pm")
@@ -390,7 +391,46 @@ export async function generatePDF(
   });
   yPosition += 12;
 
+  // Extract dynamic policies from service providers used in the itinerary
+  const dynamicPolicies = extractPolicies(dayData);
+
+  // If there are dynamic policies from service providers, show them first
+  if (dynamicPolicies.length > 0) {
+    doc.setFontSize(fontSize);
+    doc.setFont(fontFamily, "bold");
+    doc.setTextColor(blackR, blackG, blackB);
+    doc.text(language === "fr" ? "Politiques des prestataires" : "Service Provider Policies", margin, yPosition);
+    yPosition += 8;
+
+    dynamicPolicies.forEach((policy) => {
+      checkPageBreak(20);
+      
+      // Provider name
+      doc.setFontSize(fontSize);
+      doc.setFont(fontFamily, "bold");
+      doc.setTextColor(blackR, blackG, blackB);
+      doc.text(policy.providerName, margin + 5, yPosition);
+      yPosition += 5;
+
+      // Policy text
+      doc.setFontSize(fontSize - 1);
+      doc.setFont(fontFamily, "normal");
+      doc.setTextColor(grayR, grayG, grayB);
+      const policyLines = doc.splitTextToSize(policy.policy, pageWidth - 2 * margin - 10);
+      doc.text(policyLines, margin + 5, yPosition);
+      yPosition += policyLines.length * 4 + 6;
+    });
+
+    yPosition += 8;
+  }
+
   // General Policy Paragraph
+  doc.setFontSize(fontSize);
+  doc.setFont(fontFamily, "bold");
+  doc.setTextColor(blackR, blackG, blackB);
+  doc.text(language === "fr" ? "Politique générale" : "General Policy", margin, yPosition);
+  yPosition += 6;
+
   doc.setFontSize(fontSize);
   doc.setFont(fontFamily, "normal");
   doc.setTextColor(blackR, blackG, blackB);

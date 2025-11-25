@@ -5,6 +5,12 @@ export interface DayItem {
   time: string;
   event: string;
   location: string;
+  service_provider_id?: string;
+  service_provider?: {
+    id: string;
+    name: string;
+    policy?: string;
+  };
 }
 
 export interface DayData {
@@ -39,6 +45,12 @@ export interface ItineraryItem {
   location: string;
   sort_order: number;
   created_at: string;
+  service_provider_id?: string;
+  service_provider?: {
+    id: string;
+    name: string;
+    policy?: string;
+  };
 }
 
 export interface ItineraryWithItems extends Itinerary {
@@ -73,6 +85,8 @@ export function itemsToDayData(
         time: item.time,
         event: item.event,
         location: item.location,
+        service_provider_id: item.service_provider_id,
+        service_provider: item.service_provider,
       });
     }
   });
@@ -95,8 +109,9 @@ export function itemsToDayData(
 export function dayDataToItems(
   dayData: DayData[],
   itineraryId: string
-): Omit<ItineraryItem, "id" | "created_at">[] {
-  const items: Omit<ItineraryItem, "id" | "created_at">[] = [];
+): Omit<ItineraryItem, "id" | "created_at" | "service_provider">[] {
+  const items: Omit<ItineraryItem, "id" | "created_at" | "service_provider">[] =
+    [];
 
   dayData.forEach((day) => {
     day.items.forEach((item, index) => {
@@ -107,6 +122,7 @@ export function dayDataToItems(
         event: item.event,
         location: item.location,
         sort_order: index,
+        service_provider_id: item.service_provider_id,
       });
     });
   });
@@ -329,7 +345,12 @@ export async function getItineraryById(
   // Get items
   const { data: items, error: itemsError } = await supabase
     .from("itinerary_items")
-    .select("*")
+    .select(
+      `
+      *,
+      service_provider:service_providers(id, name, policy)
+    `
+    )
     .eq("itinerary_id", itineraryId)
     .order("day_date", { ascending: true })
     .order("sort_order", { ascending: true });
@@ -400,7 +421,12 @@ export async function getSharedItinerary(
   // Get items (public access via RLS policy)
   const { data: items, error: itemsError } = await supabase
     .from("itinerary_items")
-    .select("*")
+    .select(
+      `
+      *,
+      service_provider:service_providers(id, name, policy)
+    `
+    )
     .eq("itinerary_id", itinerary.id)
     .order("day_date", { ascending: true })
     .order("sort_order", { ascending: true });
@@ -418,4 +444,27 @@ export async function getSharedItinerary(
 
 export function generateShareUrl(shareToken: string): string {
   return `${window.location.origin}/share/${shareToken}`;
+}
+
+// Extract unique service provider policies from day data
+export function extractPolicies(
+  dayData: DayData[]
+): { providerName: string; policy: string }[] {
+  const policiesMap = new Map<
+    string,
+    { providerName: string; policy: string }
+  >();
+
+  dayData.forEach((day) => {
+    day.items.forEach((item) => {
+      if (item.service_provider?.policy && item.service_provider.id) {
+        policiesMap.set(item.service_provider.id, {
+          providerName: item.service_provider.name,
+          policy: item.service_provider.policy,
+        });
+      }
+    });
+  });
+
+  return Array.from(policiesMap.values());
 }

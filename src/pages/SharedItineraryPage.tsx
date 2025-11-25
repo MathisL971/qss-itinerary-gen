@@ -5,6 +5,7 @@ import { ItineraryEditor } from "@/components/ItineraryEditor";
 import {
   getSharedItinerary,
   itemsToDayData,
+  extractPolicies,
   type DayData,
 } from "@/lib/itineraryService";
 import { parseLocalDate } from "@/lib/utils";
@@ -22,6 +23,9 @@ export function SharedItineraryPage() {
     undefined
   );
   const [dayData, setDayData] = useState<DayData[]>([]);
+  const [policies, setPolicies] = useState<
+    { providerName: string; policy: string }[]
+  >([]);
   const [language, setLanguage] = useState<Language>("en");
   const t = getTranslations(language);
 
@@ -83,6 +87,11 @@ export function SharedItineraryPage() {
       setArrivalDate(arrival);
       setDepartureDate(departure);
       setDayData(days);
+
+      // Extract policies from service providers
+      const extractedPolicies = extractPolicies(days);
+      setPolicies(extractedPolicies);
+
       setLoading(false);
     } catch (err: any) {
       console.error("Unexpected error loading shared itinerary:", err);
@@ -121,14 +130,41 @@ export function SharedItineraryPage() {
   }
 
   return (
-    <ItineraryEditor
-      initialClientName={clientName}
-      initialVillaName={villaName}
-      initialArrivalDate={arrivalDate}
-      initialDepartureDate={departureDate}
-      initialDayData={dayData}
-      readOnly={true}
-      showHeader={true}
-    />
+    <div className="min-h-screen bg-background">
+      <ItineraryEditor
+        initialClientName={clientName}
+        initialVillaName={villaName}
+        initialArrivalDate={arrivalDate}
+        initialDepartureDate={departureDate}
+        initialDayData={dayData}
+        readOnly={true}
+        showHeader={true}
+      />
+
+      {/* Service Provider Policies Section */}
+      {policies.length > 0 && (
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+          <div className="border border-border/60 rounded-xl p-8 md:p-10 bg-card shadow-sm">
+            <div className="mb-6 border-b border-border/40 pb-4">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-wide uppercase text-foreground">
+                {language === "fr"
+                  ? "Conditions & Politiques"
+                  : "Terms & Policies"}
+              </h2>
+            </div>
+            <div className="space-y-6">
+              {policies.map((p, index) => (
+                <div key={index} className="space-y-2">
+                  <h3 className="font-semibold text-lg">{p.providerName}</h3>
+                  <p className="text-muted-foreground whitespace-pre-wrap text-sm leading-relaxed">
+                    {p.policy}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

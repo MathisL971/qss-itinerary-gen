@@ -6,6 +6,7 @@ import { LoginPage } from "@/pages/LoginPage";
 import { SignUpPage } from "@/pages/SignUpPage";
 import { ClientsPage } from "@/pages/ClientsPage";
 import { AccommodationsPage } from "@/pages/AccommodationsPage";
+import { ServiceProvidersPage } from "@/pages/ServiceProvidersPage";
 import { StaysPage } from "@/pages/StaysPage";
 import { StayDetailPage } from "@/pages/StayDetailPage";
 import { EditItineraryPage } from "@/pages/EditItineraryPage";
@@ -76,6 +77,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <AccommodationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/providers"
+        element={
+          <ProtectedRoute>
+            <ServiceProvidersPage />
           </ProtectedRoute>
         }
       />

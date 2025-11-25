@@ -50,6 +50,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 >
                   Accommodations
                 </Link>
+                <Link
+                  to="/providers"
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground uppercase tracking-widest transition-colors"
+                >
+                  Providers
+                </Link>
               </nav>
               <span className="text-xs text-muted-foreground hidden sm:inline tracking-wide uppercase font-medium border-r border-border/40 pr-6">
                 {user?.email}

@@ -1,0 +1,102 @@
+import { useEffect, useState } from "react";
+import { Layout } from "@/components/Layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { getAccommodations, searchAccommodations, type Accommodation } from "@/lib/accommodationService";
+import { Plus, Search, Loader2 } from "lucide-react";
+
+import { CreateAccommodationDialog } from "@/components/CreateAccommodationDialog";
+import { EditAccommodationDialog } from "@/components/EditAccommodationDialog";
+
+export function AccommodationsPage() {
+  const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    loadAccommodations();
+  }, [search]);
+
+  const loadAccommodations = async () => {
+    setLoading(true);
+    if (search) {
+      const { data } = await searchAccommodations(search);
+      if (data) setAccommodations(data);
+    } else {
+      const { data } = await getAccommodations();
+      if (data) setAccommodations(data);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <Layout>
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-10">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold tracking-wide uppercase">Accommodations</h1>
+          <CreateAccommodationDialog onAccommodationCreated={loadAccommodations} />
+        </div>
+
+        <div className="flex gap-4 mb-6">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search accommodations..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        ) : (
+          <div className="border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Capacity</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {accommodations.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                      No accommodations found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  accommodations.map((acc) => (
+                    <TableRow key={acc.id}>
+                      <TableCell className="font-medium">{acc.name}</TableCell>
+                      <TableCell className="capitalize">{acc.type}</TableCell>
+                      <TableCell>{acc.capacity || "-"}</TableCell>
+                      <TableCell className="text-right">
+                        <EditAccommodationDialog accommodation={acc} onAccommodationUpdated={loadAccommodations} />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
+    </Layout>
+  );
+}
+

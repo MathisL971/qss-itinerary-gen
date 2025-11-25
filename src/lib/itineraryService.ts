@@ -17,6 +17,8 @@ export interface Itinerary {
   user_id: string;
   client_name: string;
   villa_name: string;
+  client_id?: string;
+  accommodation_id?: string;
   arrival_date: string;
   departure_date: string;
   share_token: string;
@@ -113,7 +115,9 @@ export async function createItinerary(
   villaName: string,
   arrivalDate: Date,
   departureDate: Date,
-  dayData: DayData[]
+  dayData: DayData[],
+  clientId?: string,
+  accommodationId?: string
 ): Promise<{ data: Itinerary | null; error: any }> {
   const {
     data: { user },
@@ -132,6 +136,8 @@ export async function createItinerary(
       user_id: user.id,
       client_name: clientName,
       villa_name: villaName,
+      client_id: clientId,
+      accommodation_id: accommodationId,
       arrival_date: arrivalDate.toISOString().split("T")[0],
       departure_date: departureDate.toISOString().split("T")[0],
       share_token: shareToken,
@@ -179,7 +185,9 @@ export async function updateItinerary(
   villaName: string,
   arrivalDate: Date,
   departureDate: Date,
-  dayData: DayData[]
+  dayData: DayData[],
+  clientId?: string,
+  accommodationId?: string
 ): Promise<{ error: any }> {
   const {
     data: { user },
@@ -195,6 +203,8 @@ export async function updateItinerary(
     .update({
       client_name: clientName,
       villa_name: villaName,
+      client_id: clientId,
+      accommodation_id: accommodationId,
       arrival_date: arrivalDate.toISOString().split("T")[0],
       departure_date: departureDate.toISOString().split("T")[0],
       updated_at: new Date().toISOString(),

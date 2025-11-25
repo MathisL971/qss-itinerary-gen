@@ -1,7 +1,7 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth();
@@ -9,7 +9,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
@@ -17,16 +17,41 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <Link to="/itineraries" className="flex items-center gap-4 hover:opacity-70 transition-opacity group">
+            <Link
+              to="/itineraries"
+              className="flex items-center gap-4 hover:opacity-70 transition-opacity group"
+            >
               <img
                 src="/qss-villa-rental-logo.jpg"
                 alt="QSS Villa Rental Saint Barth Logo"
                 className="h-10 w-auto grayscale group-hover:grayscale-0 transition-all duration-500"
               />
-              <span className="text-lg font-bodoni font-bold tracking-[0.1em] uppercase border-l border-border/60 pl-4 py-1">QSS Itineraries</span>
+              <span className="text-lg font-bodoni font-bold tracking-[0.1em] uppercase border-l border-border/60 pl-4 py-1">
+                QSS Itineraries
+              </span>
             </Link>
-            <div className="flex items-center gap-4">
-              <span className="text-xs text-muted-foreground hidden sm:inline tracking-wide uppercase font-medium">
+            <div className="flex items-center gap-6">
+              <nav className="hidden md:flex items-center gap-6 mr-4">
+                <Link
+                  to="/itineraries"
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground uppercase tracking-widest transition-colors"
+                >
+                  Itineraries
+                </Link>
+                <Link
+                  to="/clients"
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground uppercase tracking-widest transition-colors"
+                >
+                  Clients
+                </Link>
+                <Link
+                  to="/accommodations"
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground uppercase tracking-widest transition-colors"
+                >
+                  Accommodations
+                </Link>
+              </nav>
+              <span className="text-xs text-muted-foreground hidden sm:inline tracking-wide uppercase font-medium border-r border-border/40 pr-6">
                 {user?.email}
               </span>
               <Button
@@ -46,4 +71,3 @@ export function Layout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-

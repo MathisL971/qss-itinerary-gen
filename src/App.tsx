@@ -1,12 +1,14 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ClipLoader } from 'react-spinners';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { LoginPage } from '@/pages/LoginPage';
-import { SignUpPage } from '@/pages/SignUpPage';
-import { ItinerariesPage } from '@/pages/ItinerariesPage';
-import { EditItineraryPage } from '@/pages/EditItineraryPage';
-import { SharedItineraryPage } from '@/pages/SharedItineraryPage';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ClipLoader } from "react-spinners";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { LoginPage } from "@/pages/LoginPage";
+import { SignUpPage } from "@/pages/SignUpPage";
+import { ItinerariesPage } from "@/pages/ItinerariesPage";
+import { EditItineraryPage } from "@/pages/EditItineraryPage";
+import { ClientsPage } from "@/pages/ClientsPage";
+import { AccommodationsPage } from "@/pages/AccommodationsPage";
+import { SharedItineraryPage } from "@/pages/SharedItineraryPage";
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -27,7 +29,11 @@ function AppRoutes() {
       <Route
         path="/"
         element={
-          user ? <Navigate to="/itineraries" replace /> : <Navigate to="/login" replace />
+          user ? (
+            <Navigate to="/itineraries" replace />
+          ) : (
+            <Navigate to="/login" replace />
+          )
         }
       />
       <Route path="/login" element={<LoginPage />} />
@@ -37,6 +43,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ItinerariesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/clients"
+        element={
+          <ProtectedRoute>
+            <ClientsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/accommodations"
+        element={
+          <ProtectedRoute>
+            <AccommodationsPage />
           </ProtectedRoute>
         }
       />

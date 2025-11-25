@@ -33,6 +33,8 @@ export function EditItineraryPage() {
       setEditorData({
         clientName: "",
         villaName: "",
+        clientId: undefined,
+        accommodationId: undefined,
         arrivalDate: undefined,
         departureDate: undefined,
         dayData: [],
@@ -67,6 +69,8 @@ export function EditItineraryPage() {
     setEditorData({
       clientName: data.client_name,
       villaName: data.villa_name,
+      clientId: data.client_id,
+      accommodationId: data.accommodation_id,
       arrivalDate,
       departureDate,
       dayData,
@@ -106,7 +110,9 @@ export function EditItineraryPage() {
         editorData.villaName,
         editorData.arrivalDate,
         editorData.departureDate,
-        editorData.dayData
+        editorData.dayData,
+        editorData.clientId,
+        editorData.accommodationId
       );
 
       if (err || !data) {
@@ -124,7 +130,9 @@ export function EditItineraryPage() {
         editorData.villaName,
         editorData.arrivalDate,
         editorData.departureDate,
-        editorData.dayData
+        editorData.dayData,
+        editorData.clientId,
+        editorData.accommodationId
       );
 
       if (err) {
@@ -203,6 +211,8 @@ export function EditItineraryPage() {
         <ItineraryEditor
           initialClientName={editorData.clientName}
           initialVillaName={editorData.villaName}
+          initialClientId={editorData.clientId}
+          initialAccommodationId={editorData.accommodationId}
           initialArrivalDate={editorData.arrivalDate}
           initialDepartureDate={editorData.departureDate}
           initialDayData={editorData.dayData}

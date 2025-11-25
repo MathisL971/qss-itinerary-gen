@@ -30,9 +30,14 @@ import {
 import { cn } from "@/lib/utils";
 import type { DayItem, DayData } from "@/lib/itineraryService";
 
+import { ClientSelector } from "@/components/ClientSelector";
+import { AccommodationSelector } from "@/components/AccommodationSelector";
+
 export interface ItineraryEditorData {
   clientName: string;
   villaName: string;
+  clientId?: string;
+  accommodationId?: string;
   arrivalDate: Date | undefined;
   departureDate: Date | undefined;
   dayData: DayData[];
@@ -41,6 +46,8 @@ export interface ItineraryEditorData {
 interface ItineraryEditorProps {
   initialClientName?: string;
   initialVillaName?: string;
+  initialClientId?: string;
+  initialAccommodationId?: string;
   initialArrivalDate?: Date;
   initialDepartureDate?: Date;
   initialDayData?: DayData[];
@@ -52,6 +59,8 @@ interface ItineraryEditorProps {
 export function ItineraryEditor({
   initialClientName = "",
   initialVillaName = "",
+  initialClientId,
+  initialAccommodationId,
   initialArrivalDate,
   initialDepartureDate,
   initialDayData = [],
@@ -61,6 +70,10 @@ export function ItineraryEditor({
 }: ItineraryEditorProps) {
   const [clientName, setClientName] = useState(initialClientName);
   const [villaName, setVillaName] = useState(initialVillaName);
+  const [clientId, setClientId] = useState(initialClientId);
+  const [accommodationId, setAccommodationId] = useState(
+    initialAccommodationId
+  );
   const [arrivalDate, setArrivalDate] = useState<Date | undefined>(
     initialArrivalDate
   );
@@ -90,6 +103,8 @@ export function ItineraryEditor({
     isUpdatingFromPropsRef.current = true;
     setClientName(initialClientName);
     setVillaName(initialVillaName);
+    setClientId(initialClientId);
+    setAccommodationId(initialAccommodationId);
     setArrivalDate(initialArrivalDate);
     setDepartureDate(initialDepartureDate);
 
@@ -112,6 +127,8 @@ export function ItineraryEditor({
   }, [
     initialClientName,
     initialVillaName,
+    initialClientId,
+    initialAccommodationId,
     initialArrivalDate,
     initialDepartureDate,
     initialDayData,
@@ -274,6 +291,8 @@ export function ItineraryEditor({
     const currentData: ItineraryEditorData = {
       clientName,
       villaName,
+      clientId,
+      accommodationId,
       arrivalDate,
       departureDate,
       dayData,
@@ -285,6 +304,8 @@ export function ItineraryEditor({
       !lastSent ||
       lastSent.clientName !== currentData.clientName ||
       lastSent.villaName !== currentData.villaName ||
+      lastSent.clientId !== currentData.clientId ||
+      lastSent.accommodationId !== currentData.accommodationId ||
       lastSent.arrivalDate !== currentData.arrivalDate ||
       lastSent.departureDate !== currentData.departureDate ||
       lastSent.dayData.length !== currentData.dayData.length ||
@@ -311,6 +332,8 @@ export function ItineraryEditor({
   }, [
     clientName,
     villaName,
+    clientId,
+    accommodationId,
     arrivalDate,
     departureDate,
     dayData,
@@ -347,33 +370,23 @@ export function ItineraryEditor({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-3">
-                <Label
-                  htmlFor="clientName"
-                  className="text-xs uppercase tracking-widest text-muted-foreground font-semibold"
-                >
-                  Client Name
-                </Label>
-                <Input
-                  id="clientName"
-                  value={clientName}
-                  onChange={(e) => setClientName(e.target.value)}
-                  placeholder="Enter client name"
-                  disabled={readOnly}
+                <ClientSelector
+                  value={clientId}
+                  initialName={clientName}
+                  onSelect={(client, name) => {
+                    setClientName(name);
+                    setClientId(client?.id);
+                  }}
                 />
               </div>
               <div className="space-y-3">
-                <Label
-                  htmlFor="villaName"
-                  className="text-xs uppercase tracking-widest text-muted-foreground font-semibold"
-                >
-                  Villa Name
-                </Label>
-                <Input
-                  id="villaName"
-                  value={villaName}
-                  onChange={(e) => setVillaName(e.target.value)}
-                  placeholder="Enter villa name"
-                  disabled={readOnly}
+                <AccommodationSelector
+                  value={accommodationId}
+                  initialName={villaName}
+                  onSelect={(acc, name) => {
+                    setVillaName(name);
+                    setAccommodationId(acc?.id);
+                  }}
                 />
               </div>
               <div className="space-y-3">

@@ -323,6 +323,25 @@
     border-color: hsl(var(--color-border)) !important;
   }
 
+  /* Ensure dialog backgrounds are solid */
+  [data-radix-dialog-content] {
+    background-color: hsl(var(--color-background)) !important;
+    border-color: hsl(var(--color-border)) !important;
+    color: hsl(var(--color-foreground)) !important;
+  }
+
+  /* Ensure select dropdown backgrounds are solid */
+  [data-radix-select-content] {
+    background-color: hsl(var(--color-popover)) !important;
+    border-color: hsl(var(--color-border)) !important;
+    color: hsl(var(--color-popover-foreground)) !important;
+  }
+
+  [data-radix-select-trigger] {
+    background-color: hsl(var(--color-background)) !important;
+    color: hsl(var(--color-foreground)) !important;
+  }
+
   /* Calendar popover background */
   [data-slot="popover-content"] {
     background-color: hsl(var(--color-popover)) !important;

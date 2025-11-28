@@ -40,7 +40,8 @@ export async function generatePDF(
   arrivalDate: Date,
   departureDate: Date,
   dayData: DayData[],
-  clientLanguage?: string | null
+  clientLanguage?: string | null,
+  accommodationName?: string
 ): Promise<void> {
   if (!arrivalDate || !departureDate) {
     console.error("Missing dates for PDF generation", {
@@ -338,10 +339,13 @@ export async function generatePDF(
         );
         doc.text(eventLines, eventColX, yPosition);
 
-        // Location (may need to wrap)
+        // Location (may need to wrap) - use accommodation name if is_accommodation_location is true
+        const locationText = item.is_accommodation_location
+          ? accommodationName || villaName || "Accommodation"
+          : item.location || "-";
         const locationMaxWidth = tableRight - locationColX - 5;
         const locationLines = doc.splitTextToSize(
-          item.location || "-",
+          locationText,
           locationMaxWidth
         );
         doc.text(locationLines, locationColX, yPosition);
@@ -377,174 +381,112 @@ export async function generatePDF(
     yPosition += 6; // Space between days
   });
 
-  // Add second page with Cancellation and Delays Policies
+  // Extract dynamic policies from service providers used in the itinerary
+  // Pass the language to get policies in the correct language
+  const dynamicPolicies = extractPolicies(dayData, language);
+
+  // Always add policies page
   doc.addPage();
-  drawHeader(); // Draw header on second page
+  drawHeader();
   yPosition = margin + headerHeight;
 
-  // Main title: CANCELLATION AND DELAYS POLICIES
-  doc.setFontSize(fontSize);
+  // Main title: CONDITIONS & POLICIES
+  doc.setFontSize(fontSize + 2);
   doc.setFont(fontFamily, "bold");
   doc.setTextColor(blackR, blackG, blackB);
-  doc.text(t.labels.cancellationAndDelaysPolicies, pageWidth / 2, yPosition, {
-    align: "center",
-  });
-  yPosition += 12;
+  doc.text(
+    language === "fr" ? "CONDITIONS & POLITIQUES" : "CONDITIONS & POLICIES",
+    pageWidth / 2,
+    yPosition,
+    { align: "center" }
+  );
+  yPosition += 15;
 
-  // Extract dynamic policies from service providers used in the itinerary
-  const dynamicPolicies = extractPolicies(dayData);
-
-  // If there are dynamic policies from service providers, show them first
+  // Display dynamic policies from linked providers
   if (dynamicPolicies.length > 0) {
-    doc.setFontSize(fontSize);
-    doc.setFont(fontFamily, "bold");
-    doc.setTextColor(blackR, blackG, blackB);
-    doc.text(language === "fr" ? "Politiques des prestataires" : "Service Provider Policies", margin, yPosition);
-    yPosition += 8;
+    dynamicPolicies.forEach((policy, index) => {
+      // Check if we need a new page (estimate space needed for provider name + policy)
+      const estimatedLines = Math.ceil(policy.policy.length / 80) + 2;
+      checkPageBreak(estimatedLines * 5 + 15);
 
-    dynamicPolicies.forEach((policy) => {
-      checkPageBreak(20);
-      
-      // Provider name
+      // Provider name as header
       doc.setFontSize(fontSize);
       doc.setFont(fontFamily, "bold");
       doc.setTextColor(blackR, blackG, blackB);
-      doc.text(policy.providerName, margin + 5, yPosition);
-      yPosition += 5;
+      doc.text(policy.providerName.toUpperCase(), margin, yPosition);
+
+      // Underline
+      const providerNameWidth = doc.getTextWidth(
+        policy.providerName.toUpperCase()
+      );
+      doc.setDrawColor(blackR, blackG, blackB);
+      doc.setLineWidth(0.3);
+      doc.line(
+        margin,
+        yPosition + 1,
+        margin + providerNameWidth,
+        yPosition + 1
+      );
+      yPosition += 8;
 
       // Policy text
       doc.setFontSize(fontSize - 1);
       doc.setFont(fontFamily, "normal");
-      doc.setTextColor(grayR, grayG, grayB);
-      const policyLines = doc.splitTextToSize(policy.policy, pageWidth - 2 * margin - 10);
-      doc.text(policyLines, margin + 5, yPosition);
-      yPosition += policyLines.length * 4 + 6;
-    });
+      doc.setTextColor(60, 60, 60); // Slightly darker than gray for readability
+      const policyLines = doc.splitTextToSize(
+        policy.policy,
+        pageWidth - 2 * margin
+      );
+      doc.text(policyLines, margin, yPosition);
+      yPosition += policyLines.length * 4 + 12;
 
-    yPosition += 8;
+      // Add a subtle separator between providers (except after the last one)
+      if (index < dynamicPolicies.length - 1) {
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.1);
+        doc.line(
+          margin + 20,
+          yPosition - 6,
+          pageWidth - margin - 20,
+          yPosition - 6
+        );
+      }
+    });
+  } else {
+    // Show message when no policies are available
+    doc.setFontSize(fontSize);
+    doc.setFont(fontFamily, "italic");
+    doc.setTextColor(grayR, grayG, grayB);
+    const noPolicesText =
+      language === "fr"
+        ? "Aucune politique de prestataire spécifique pour cet itinéraire."
+        : "No specific service provider policies for this itinerary.";
+    doc.text(noPolicesText, margin, yPosition);
+    yPosition += 10;
   }
 
-  // General Policy Paragraph
-  doc.setFontSize(fontSize);
-  doc.setFont(fontFamily, "bold");
-  doc.setTextColor(blackR, blackG, blackB);
-  doc.text(language === "fr" ? "Politique générale" : "General Policy", margin, yPosition);
-  yPosition += 6;
-
-  doc.setFontSize(fontSize);
-  doc.setFont(fontFamily, "normal");
-  doc.setTextColor(blackR, blackG, blackB);
-  const generalPolicyText = t.policies.generalPolicy;
-  const generalPolicyLines = doc.splitTextToSize(
-    generalPolicyText,
-    pageWidth - 2 * margin
-  );
-  doc.text(generalPolicyLines, margin, yPosition);
-  yPosition += generalPolicyLines.length * 4 + 5;
-
-  // Fee Details and Specific Policies Section
-  doc.setFontSize(fontSize);
-  doc.setFont(fontFamily, "bold");
-  doc.setTextColor(blackR, blackG, blackB);
-  doc.text(t.labels.feeDetailsAndSpecificPolicies, margin, yPosition);
-  yPosition += 6;
-
-  // Bulleted list of policies
-  doc.setFontSize(fontSize);
-  doc.setFont(fontFamily, "normal");
-  doc.setTextColor(blackR, blackG, blackB);
-
-  const policies = [
-    t.policies.establishments.isola,
-    t.policies.establishments.shellona,
-    t.policies.establishments.tamarin,
-    t.policies.establishments.guerite,
-    t.policies.establishments.mamo,
-    t.policies.establishments.gypsea,
-  ];
-
-  policies.forEach((policy) => {
-    checkPageBreak(10);
-    const bulletX = margin + 5;
-    const textX = margin + 10;
-    doc.text("•", bulletX, yPosition);
-
-    // Handle GYPSEA special formatting (check for French or English version)
-    const gypseaBoldText =
-      language === "fr"
-        ? "POLITIQUE D'ANNULATION DE 48 HEURES"
-        : "48 HOURS CANCELLATION POLICY";
-
-    if (policy.includes(gypseaBoldText)) {
-      const parts = policy.split(gypseaBoldText);
-      doc.setFont(fontFamily, "normal");
-      doc.text("GYPSEA: ", textX, yPosition);
-      const textWidth = doc.getTextWidth("GYPSEA: ");
-      doc.setFont(fontFamily, "bolditalic");
-      doc.text(gypseaBoldText, textX + textWidth, yPosition);
-      doc.setFont(fontFamily, "normal");
-      const boldTextWidth = doc.getTextWidth(gypseaBoldText);
-      const remainingText = parts[1];
-      const remainingLines = doc.splitTextToSize(
-        remainingText,
-        pageWidth - margin - textX - textWidth - boldTextWidth - 5
-      );
-      if (remainingLines.length > 1) {
-        doc.text(
-          remainingLines[0],
-          textX + textWidth + boldTextWidth,
-          yPosition
-        );
-        yPosition += 6;
-        doc.text(remainingLines.slice(1), textX, yPosition);
-      } else {
-        doc.text(remainingText, textX + textWidth + boldTextWidth, yPosition);
-      }
-    } else {
-      const policyLines = doc.splitTextToSize(
-        policy,
-        pageWidth - margin - textX - 5
-      );
-      doc.text(policyLines, textX, yPosition);
-      if (policyLines.length > 1) {
-        yPosition += (policyLines.length - 1) * 6;
-      }
-    }
-    yPosition += 5;
-  });
-
+  // General cancellation note
   yPosition += 5;
-
-  // For GYPSEA Section
-  checkPageBreak(15);
+  checkPageBreak(30);
   doc.setFontSize(fontSize);
   doc.setFont(fontFamily, "bold");
   doc.setTextColor(blackR, blackG, blackB);
-  doc.text(t.labels.forGypsea, margin, yPosition);
+  doc.text(
+    language === "fr" ? "NOTE IMPORTANTE" : "IMPORTANT NOTE",
+    margin,
+    yPosition
+  );
   yPosition += 6;
 
-  doc.setFontSize(fontSize);
+  doc.setFontSize(fontSize - 1);
   doc.setFont(fontFamily, "normal");
-  doc.setTextColor(blackR, blackG, blackB);
-  const gypseaText = t.policies.gypseaPolicy;
-  const gypseaLines = doc.splitTextToSize(gypseaText, pageWidth - 2 * margin);
-  doc.text(gypseaLines, margin, yPosition);
-  yPosition += gypseaLines.length * 4 + 5;
-
-  // NAILS by Romane Section
-  checkPageBreak(15);
-  doc.setFontSize(fontSize);
-  doc.setFont(fontFamily, "bold");
-  doc.setTextColor(blackR, blackG, blackB);
-  doc.text(t.labels.nailsByRomane, margin, yPosition);
-  yPosition += 6;
-
-  doc.setFontSize(fontSize);
-  doc.setFont(fontFamily, "normal");
-  doc.setTextColor(blackR, blackG, blackB);
-  const nailsText = t.policies.nailsPolicy;
-  const nailsLines = doc.splitTextToSize(nailsText, pageWidth - 2 * margin);
-  doc.text(nailsLines, margin, yPosition);
+  doc.setTextColor(60, 60, 60);
+  const generalNote =
+    language === "fr"
+      ? "Veuillez noter que les politiques d'annulation et les conditions peuvent varier selon les prestataires. Nous vous recommandons de confirmer directement avec chaque établissement pour les détails spécifiques."
+      : "Please note that cancellation policies and conditions may vary by provider. We recommend confirming directly with each establishment for specific details.";
+  const noteLines = doc.splitTextToSize(generalNote, pageWidth - 2 * margin);
+  doc.text(noteLines, margin, yPosition);
 
   // Add page numbers to all pages
   // Get the current page count right before drawing to ensure accuracy

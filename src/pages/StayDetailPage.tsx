@@ -62,10 +62,23 @@ export function StayDetailPage() {
       setItineraryId(itinerary.id);
       setShareToken(itinerary.share_token);
 
-      // Load itinerary items
+      // Load itinerary items with service and provider data (including policies)
       const { data: items } = await supabase
         .from("itinerary_items")
-        .select("*")
+        .select(
+          `
+          *,
+          service_provider:service_providers(id, name, policy_en, policy_fr),
+          service:services(
+            id,
+            name,
+            base_price,
+            currency,
+            pricing_type,
+            service_providers(id, name, policy_en, policy_fr)
+          )
+        `
+        )
         .eq("itinerary_id", itinerary.id)
         .order("day_date", { ascending: true })
         .order("sort_order", { ascending: true });
@@ -157,7 +170,8 @@ export function StayDetailPage() {
         itineraryData.arrivalDate,
         itineraryData.departureDate,
         itineraryData.dayData || [],
-        stay.client?.language
+        stay.client?.language,
+        stay.accommodation?.name
       );
     } catch (error) {
       console.error("Error exporting PDF:", error);

@@ -8,7 +8,8 @@ export interface ServiceProvider {
   address?: string;
   website?: string;
   notes?: string;
-  policy?: string;
+  policy_en?: string;
+  policy_fr?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;

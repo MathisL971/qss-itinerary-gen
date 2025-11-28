@@ -10,7 +10,8 @@ export interface DayItem {
   service_provider?: {
     id: string;
     name: string;
-    policy?: string;
+    policy_en?: string;
+    policy_fr?: string;
   };
   service_id?: string;
   service?: {
@@ -22,7 +23,8 @@ export interface DayItem {
     service_providers?: {
       id: string;
       name: string;
-      policy?: string;
+      policy_en?: string;
+      policy_fr?: string;
     };
   };
 }
@@ -64,7 +66,8 @@ export interface ItineraryItem {
   service_provider?: {
     id: string;
     name: string;
-    policy?: string;
+    policy_en?: string;
+    policy_fr?: string;
   };
   service_id?: string;
   service?: {
@@ -76,7 +79,8 @@ export interface ItineraryItem {
     service_providers?: {
       id: string;
       name: string;
-      policy?: string;
+      policy_en?: string;
+      policy_fr?: string;
     };
   };
 }
@@ -388,14 +392,14 @@ export async function getItineraryById(
     .select(
       `
       *,
-      service_provider:service_providers(id, name, policy),
+      service_provider:service_providers(id, name, policy_en, policy_fr),
       service:services(
         id,
         name,
         base_price,
         currency,
         pricing_type,
-        service_providers(id, name, policy)
+        service_providers(id, name, policy_en, policy_fr)
       )
     `
     )
@@ -472,14 +476,14 @@ export async function getSharedItinerary(
     .select(
       `
       *,
-      service_provider:service_providers(id, name, policy),
+      service_provider:service_providers(id, name, policy_en, policy_fr),
       service:services(
         id,
         name,
         base_price,
         currency,
         pricing_type,
-        service_providers(id, name, policy)
+        service_providers(id, name, policy_en, policy_fr)
       )
     `
     )
@@ -503,8 +507,10 @@ export function generateShareUrl(shareToken: string): string {
 }
 
 // Extract unique service provider policies from day data
+// Language parameter determines which policy version to return ('en' or 'fr')
 export function extractPolicies(
-  dayData: DayData[]
+  dayData: DayData[],
+  language: "en" | "fr" = "en"
 ): { providerName: string; policy: string }[] {
   const policiesMap = new Map<
     string,
@@ -514,18 +520,30 @@ export function extractPolicies(
   dayData.forEach((day) => {
     day.items.forEach((item) => {
       // Check direct service_provider link
-      if (item.service_provider?.policy && item.service_provider.id) {
-        policiesMap.set(item.service_provider.id, {
-          providerName: item.service_provider.name,
-          policy: item.service_provider.policy,
-        });
+      const directProvider = item.service_provider;
+      if (directProvider?.id) {
+        const policy = language === "fr" 
+          ? (directProvider.policy_fr || directProvider.policy_en)
+          : (directProvider.policy_en || directProvider.policy_fr);
+        if (policy) {
+          policiesMap.set(directProvider.id, {
+            providerName: directProvider.name,
+            policy,
+          });
+        }
       }
       // Check service's provider link
-      if (item.service?.service_providers?.policy && item.service.service_providers.id) {
-        policiesMap.set(item.service.service_providers.id, {
-          providerName: item.service.service_providers.name,
-          policy: item.service.service_providers.policy,
-        });
+      const serviceProvider = item.service?.service_providers;
+      if (serviceProvider?.id) {
+        const policy = language === "fr"
+          ? (serviceProvider.policy_fr || serviceProvider.policy_en)
+          : (serviceProvider.policy_en || serviceProvider.policy_fr);
+        if (policy) {
+          policiesMap.set(serviceProvider.id, {
+            providerName: serviceProvider.name,
+            policy,
+          });
+        }
       }
     });
   });

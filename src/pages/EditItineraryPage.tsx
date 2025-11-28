@@ -64,14 +64,14 @@ export function EditItineraryPage() {
         .select(
           `
           *,
-          service_provider:service_providers(id, name, policy),
+          service_provider:service_providers(id, name, policy_en, policy_fr),
           service:services(
             id,
             name,
             base_price,
             currency,
             pricing_type,
-            service_providers(id, name, policy)
+            service_providers(id, name, policy_en, policy_fr)
           )
         `
         )

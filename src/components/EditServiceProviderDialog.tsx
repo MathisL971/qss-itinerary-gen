@@ -37,7 +37,8 @@ export function EditServiceProviderDialog({
   const [address, setAddress] = useState("");
   const [website, setWebsite] = useState("");
   const [notes, setNotes] = useState("");
-  const [policy, setPolicy] = useState("");
+  const [policyEn, setPolicyEn] = useState("");
+  const [policyFr, setPolicyFr] = useState("");
   const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
@@ -48,7 +49,8 @@ export function EditServiceProviderDialog({
       setAddress(provider.address || "");
       setWebsite(provider.website || "");
       setNotes(provider.notes || "");
-      setPolicy(provider.policy || "");
+      setPolicyEn(provider.policy_en || "");
+      setPolicyFr(provider.policy_fr || "");
       setIsActive(provider.is_active);
     }
   }, [provider]);
@@ -65,7 +67,8 @@ export function EditServiceProviderDialog({
       address,
       website,
       notes,
-      policy,
+      policy_en: policyEn || undefined,
+      policy_fr: policyFr || undefined,
       is_active: isActive,
     });
     setLoading(false);
@@ -146,12 +149,23 @@ export function EditServiceProviderDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-policy">Policy</Label>
+            <Label htmlFor="edit-policy-en">Cancellation Policy (English)</Label>
             <Textarea
-              id="edit-policy"
-              value={policy}
-              onChange={(e) => setPolicy(e.target.value)}
+              id="edit-policy-en"
+              value={policyEn}
+              onChange={(e) => setPolicyEn(e.target.value)}
               placeholder="Cancellation policy, terms, etc. (displayed on itinerary)"
+              rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-policy-fr">Cancellation Policy (French)</Label>
+            <Textarea
+              id="edit-policy-fr"
+              value={policyFr}
+              onChange={(e) => setPolicyFr(e.target.value)}
+              placeholder="Politique d'annulation, conditions, etc. (affiché sur l'itinéraire)"
               rows={3}
             />
           </div>

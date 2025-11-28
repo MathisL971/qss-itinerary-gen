@@ -98,6 +98,7 @@ export function ItinerariesPage() {
       const clientName = data.stay?.client?.name || "";
       const villaName = data.stay?.accommodation?.name || "";
       const clientLanguage = data.stay?.client?.language;
+      const accommodationName = data.stay?.accommodation?.name || "";
 
       await generatePDF(
         clientName,
@@ -105,7 +106,8 @@ export function ItinerariesPage() {
         arrivalDate,
         departureDate,
         dayData,
-        clientLanguage
+        clientLanguage,
+        accommodationName
       );
     } catch (error) {
       console.error("Error exporting PDF:", error);

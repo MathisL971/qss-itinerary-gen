@@ -32,7 +32,8 @@ export function CreateServiceProviderDialog({
   const [address, setAddress] = useState("");
   const [website, setWebsite] = useState("");
   const [notes, setNotes] = useState("");
-  const [policy, setPolicy] = useState("");
+  const [policyEn, setPolicyEn] = useState("");
+  const [policyFr, setPolicyFr] = useState("");
   const [isActive, setIsActive] = useState(true);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,7 +48,8 @@ export function CreateServiceProviderDialog({
       address,
       website,
       notes,
-      policy,
+      policy_en: policyEn || undefined,
+      policy_fr: policyFr || undefined,
       is_active: isActive,
     });
     setLoading(false);
@@ -66,7 +68,8 @@ export function CreateServiceProviderDialog({
     setAddress("");
     setWebsite("");
     setNotes("");
-    setPolicy("");
+    setPolicyEn("");
+    setPolicyFr("");
     setIsActive(true);
   };
 
@@ -146,12 +149,23 @@ export function CreateServiceProviderDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="policy">Policy</Label>
+            <Label htmlFor="policy-en">Cancellation Policy (English)</Label>
             <Textarea
-              id="policy"
-              value={policy}
-              onChange={(e) => setPolicy(e.target.value)}
+              id="policy-en"
+              value={policyEn}
+              onChange={(e) => setPolicyEn(e.target.value)}
               placeholder="Cancellation policy, terms, etc. (displayed on itinerary)"
+              rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="policy-fr">Cancellation Policy (French)</Label>
+            <Textarea
+              id="policy-fr"
+              value={policyFr}
+              onChange={(e) => setPolicyFr(e.target.value)}
+              placeholder="Politique d'annulation, conditions, etc. (affiché sur l'itinéraire)"
               rows={3}
             />
           </div>

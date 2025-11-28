@@ -88,8 +88,8 @@ export function SharedItineraryPage() {
       setDepartureDate(departure);
       setDayData(days);
 
-      // Extract policies from service providers
-      const extractedPolicies = extractPolicies(days);
+      // Extract policies from service providers (in the correct language)
+      const extractedPolicies = extractPolicies(days, clientLang);
       setPolicies(extractedPolicies);
 
       setLoading(false);

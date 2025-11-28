@@ -1,8 +1,8 @@
 -- Complete Schema Setup
 -- This migration creates all tables, indexes, triggers, and RLS policies
 
--- Enable UUID extension if not already enabled
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Note: Using gen_random_uuid() which is built into PostgreSQL 13+
+-- No extension needed
 
 -- Create function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -19,7 +19,7 @@ $$ LANGUAGE plpgsql;
 
 -- Create clients table
 CREATE TABLE IF NOT EXISTS clients (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     email TEXT,
     phone TEXT,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS clients (
 
 -- Create accommodations table
 CREATE TABLE IF NOT EXISTS accommodations (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     type TEXT NOT NULL DEFAULT 'villa',
     address TEXT,
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS accommodations (
 
 -- Create stays table
 CREATE TABLE IF NOT EXISTS stays (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
     accommodation_id UUID NOT NULL REFERENCES accommodations(id) ON DELETE CASCADE,
     arrival_date DATE NOT NULL,
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS stays (
 
 -- Create itineraries table
 CREATE TABLE IF NOT EXISTS itineraries (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     client_name TEXT NOT NULL,
     villa_name TEXT NOT NULL,
@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS itineraries (
 
 -- Create itinerary_items table
 CREATE TABLE IF NOT EXISTS itinerary_items (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     itinerary_id UUID NOT NULL REFERENCES itineraries(id) ON DELETE CASCADE,
     day_date DATE NOT NULL,
     time TEXT NOT NULL DEFAULT '',

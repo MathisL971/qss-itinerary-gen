@@ -6,7 +6,7 @@
 -- ============================================
 
 CREATE TABLE IF NOT EXISTS services (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     service_provider_id UUID NOT NULL REFERENCES service_providers(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     description TEXT,

@@ -5,7 +5,7 @@
 -- ============================================
 
 CREATE TABLE IF NOT EXISTS service_categories (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     description TEXT,
     icon TEXT,
@@ -43,7 +43,7 @@ CREATE POLICY "Authenticated users can delete service_categories" ON service_cat
 -- ============================================
 
 CREATE TABLE IF NOT EXISTS service_providers (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     category_id UUID REFERENCES service_categories(id),
     description TEXT,
@@ -86,7 +86,7 @@ CREATE POLICY "Authenticated users can delete service_providers" ON service_prov
 -- ============================================
 
 CREATE TABLE IF NOT EXISTS service_provider_contacts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     service_provider_id UUID NOT NULL REFERENCES service_providers(id) ON DELETE CASCADE,
     contact_type TEXT NOT NULL, -- 'phone', 'email', 'whatsapp', etc.
     value TEXT NOT NULL,

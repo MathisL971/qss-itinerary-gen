@@ -10,3 +10,4 @@ CREATE INDEX IF NOT EXISTS idx_clients_language ON clients(language);
 -- Update existing clients to have default language (English)
 UPDATE clients SET language = 'en' WHERE language IS NULL;
 
+

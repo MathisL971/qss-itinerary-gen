@@ -26,7 +26,8 @@ import { EditServiceCategoryDialog } from "@/components/EditServiceCategoryDialo
 import { CreateServiceProviderDialog } from "@/components/CreateServiceProviderDialog";
 import { EditServiceProviderDialog } from "@/components/EditServiceProviderDialog";
 import { ManageContactsDialog } from "@/components/ManageContactsDialog";
-import { Edit, Trash2, Search, ExternalLink, Phone, Mail, Users } from "lucide-react";
+import { ManageServicesDialog } from "@/components/ManageServicesDialog";
+import { Edit, Trash2, Search, ExternalLink, Phone, Mail, Users, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function ServiceProvidersPage() {
@@ -82,6 +83,8 @@ function ProvidersTab() {
   const [editOpen, setEditOpen] = useState(false);
   const [contactsProvider, setContactsProvider] = useState<ServiceProvider | null>(null);
   const [contactsOpen, setContactsOpen] = useState(false);
+  const [servicesProvider, setServicesProvider] = useState<ServiceProvider | null>(null);
+  const [servicesOpen, setServicesOpen] = useState(false);
 
   const loadProviders = async () => {
     if (search) {
@@ -181,6 +184,17 @@ function ProvidersTab() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        title="Manage Services"
+                        onClick={() => {
+                          setServicesProvider(provider);
+                          setServicesOpen(true);
+                        }}
+                      >
+                        <Package className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         title="Manage Contacts"
                         onClick={() => {
                           setContactsProvider(provider);
@@ -228,6 +242,13 @@ function ProvidersTab() {
         providerName={contactsProvider?.name || ""}
         open={contactsOpen}
         onOpenChange={setContactsOpen}
+      />
+
+      <ManageServicesDialog
+        providerId={servicesProvider?.id || null}
+        providerName={servicesProvider?.name || ""}
+        open={servicesOpen}
+        onOpenChange={setServicesOpen}
       />
     </div>
   );

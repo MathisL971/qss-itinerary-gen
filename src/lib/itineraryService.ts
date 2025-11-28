@@ -5,11 +5,25 @@ export interface DayItem {
   time: string;
   event: string;
   location: string;
+  is_accommodation_location?: boolean;
   service_provider_id?: string;
   service_provider?: {
     id: string;
     name: string;
     policy?: string;
+  };
+  service_id?: string;
+  service?: {
+    id: string;
+    name: string;
+    base_price?: number;
+    currency?: string;
+    pricing_type?: string;
+    service_providers?: {
+      id: string;
+      name: string;
+      policy?: string;
+    };
   };
 }
 
@@ -43,6 +57,7 @@ export interface ItineraryItem {
   time: string;
   event: string;
   location: string;
+  is_accommodation_location?: boolean;
   sort_order: number;
   created_at: string;
   service_provider_id?: string;
@@ -50,6 +65,19 @@ export interface ItineraryItem {
     id: string;
     name: string;
     policy?: string;
+  };
+  service_id?: string;
+  service?: {
+    id: string;
+    name: string;
+    base_price?: number;
+    currency?: string;
+    pricing_type?: string;
+    service_providers?: {
+      id: string;
+      name: string;
+      policy?: string;
+    };
   };
 }
 
@@ -85,8 +113,11 @@ export function itemsToDayData(
         time: item.time,
         event: item.event,
         location: item.location,
+        is_accommodation_location: item.is_accommodation_location,
         service_provider_id: item.service_provider_id,
         service_provider: item.service_provider,
+        service_id: item.service_id,
+        service: item.service,
       });
     }
   });
@@ -109,23 +140,32 @@ export function itemsToDayData(
 export function dayDataToItems(
   dayData: DayData[],
   itineraryId: string
-): Omit<ItineraryItem, "id" | "created_at" | "service_provider">[] {
-  const items: Omit<ItineraryItem, "id" | "created_at" | "service_provider">[] =
+): Omit<ItineraryItem, "id" | "created_at" | "service_provider" | "service">[] {
+  const items: Omit<ItineraryItem, "id" | "created_at" | "service_provider" | "service">[] =
     [];
 
   dayData.forEach((day) => {
     day.items.forEach((item, index) => {
-      items.push({
+      const dbItem = {
         itinerary_id: itineraryId,
         day_date: day.date.toISOString().split("T")[0],
         time: item.time,
         event: item.event,
         location: item.location,
+        is_accommodation_location: item.is_accommodation_location || false,
         sort_order: index,
-        service_provider_id: item.service_provider_id,
-      });
+        service_provider_id: item.service_provider_id || null,
+        service_id: item.service_id || null,
+      };
+      items.push(dbItem);
     });
   });
+
+  // Debug: log items with service_id
+  const itemsWithService = items.filter(i => i.service_id);
+  if (itemsWithService.length > 0) {
+    console.log("Items with service_id:", itemsWithService.map(i => ({ event: i.event, service_id: i.service_id })));
+  }
 
   return items;
 }
@@ -342,13 +382,21 @@ export async function getItineraryById(
     return { data: null, error: itineraryError };
   }
 
-  // Get items
+  // Get items with service and provider data
   const { data: items, error: itemsError } = await supabase
     .from("itinerary_items")
     .select(
       `
       *,
-      service_provider:service_providers(id, name, policy)
+      service_provider:service_providers(id, name, policy),
+      service:services(
+        id,
+        name,
+        base_price,
+        currency,
+        pricing_type,
+        service_providers(id, name, policy)
+      )
     `
     )
     .eq("itinerary_id", itineraryId)
@@ -418,13 +466,21 @@ export async function getSharedItinerary(
     };
   }
 
-  // Get items (public access via RLS policy)
+  // Get items with service and provider data (public access via RLS policy)
   const { data: items, error: itemsError } = await supabase
     .from("itinerary_items")
     .select(
       `
       *,
-      service_provider:service_providers(id, name, policy)
+      service_provider:service_providers(id, name, policy),
+      service:services(
+        id,
+        name,
+        base_price,
+        currency,
+        pricing_type,
+        service_providers(id, name, policy)
+      )
     `
     )
     .eq("itinerary_id", itinerary.id)
@@ -457,10 +513,18 @@ export function extractPolicies(
 
   dayData.forEach((day) => {
     day.items.forEach((item) => {
+      // Check direct service_provider link
       if (item.service_provider?.policy && item.service_provider.id) {
         policiesMap.set(item.service_provider.id, {
           providerName: item.service_provider.name,
           policy: item.service_provider.policy,
+        });
+      }
+      // Check service's provider link
+      if (item.service?.service_providers?.policy && item.service.service_providers.id) {
+        policiesMap.set(item.service.service_providers.id, {
+          providerName: item.service.service_providers.name,
+          policy: item.service.service_providers.policy,
         });
       }
     });

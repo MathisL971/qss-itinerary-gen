@@ -58,10 +58,23 @@ export function EditItineraryPage() {
     if (!itineraryError && itinerary) {
       setItineraryId(itinerary.id);
 
-      // Load itinerary items
+      // Load itinerary items with service and provider data
       const { data: items } = await supabase
         .from("itinerary_items")
-        .select("*")
+        .select(
+          `
+          *,
+          service_provider:service_providers(id, name, policy),
+          service:services(
+            id,
+            name,
+            base_price,
+            currency,
+            pricing_type,
+            service_providers(id, name, policy)
+          )
+        `
+        )
         .eq("itinerary_id", itinerary.id)
         .order("day_date", { ascending: true })
         .order("sort_order", { ascending: true });

@@ -7,6 +7,7 @@ import {
   GripVertical,
   ChevronUp,
   ChevronDown,
+  Home,
 } from "lucide-react";
 import "../App.css";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ import type { DayItem, DayData } from "@/lib/itineraryService";
 
 import { ClientSelector } from "@/components/ClientSelector";
 import { AccommodationSelector } from "@/components/AccommodationSelector";
+import { ItemServicePicker } from "@/components/ItemServicePicker";
 
 export interface ItineraryEditorData {
   clientName: string;
@@ -138,7 +140,10 @@ export function ItineraryEditor({
           itemA.id === itemB.id &&
           itemA.time === itemB.time &&
           itemA.event === itemB.event &&
-          itemA.location === itemB.location
+          itemA.location === itemB.location &&
+          itemA.is_accommodation_location === itemB.is_accommodation_location &&
+          itemA.service_id === itemB.service_id &&
+          itemA.service_provider_id === itemB.service_provider_id
         );
       });
     });
@@ -319,7 +324,52 @@ export function ItineraryEditor({
     const updatedDays = [...dayData];
     const item = updatedDays[dayIndex].items.find((i) => i.id === itemId);
     if (item) {
-      item[field] = value;
+      (item as any)[field] = value;
+    }
+    setDayData(updatedDays);
+  };
+
+  // Helper to update service for an item
+  const updateDayItemService = (
+    dayIndex: number,
+    itemId: string,
+    serviceId: string | undefined,
+    service: DayItem["service"]
+  ) => {
+    if (readOnly) return;
+    const updatedDays = [...dayData];
+    const item = updatedDays[dayIndex].items.find((i) => i.id === itemId);
+    if (item) {
+      item.service_id = serviceId;
+      item.service = service;
+      // Also update service_provider_id from the service's provider
+      if (service?.service_providers?.id) {
+        item.service_provider_id = service.service_providers.id;
+        item.service_provider = {
+          id: service.service_providers.id,
+          name: service.service_providers.name,
+          policy: (service.service_providers as any)?.policy,
+        };
+      } else if (!serviceId) {
+        // Clear provider if service is cleared
+        item.service_provider_id = undefined;
+        item.service_provider = undefined;
+      }
+    }
+    setDayData(updatedDays);
+  };
+
+  // Helper to toggle accommodation as location
+  const toggleAccommodationLocation = (dayIndex: number, itemId: string) => {
+    if (readOnly) return;
+    const updatedDays = [...dayData];
+    const item = updatedDays[dayIndex].items.find((i) => i.id === itemId);
+    if (item) {
+      item.is_accommodation_location = !item.is_accommodation_location;
+      // Clear the location text when using accommodation
+      if (item.is_accommodation_location) {
+        item.location = "";
+      }
     }
     setDayData(updatedDays);
   };
@@ -620,23 +670,37 @@ export function ItineraryEditor({
                       </div>
                     </div>
                     <div className="border border-border/60 rounded-xl overflow-hidden bg-card shadow-sm hover:shadow-md transition-shadow duration-300">
-                      <Table>
+                      <Table className={readOnly ? "table-fixed" : ""}>
                         <TableHeader>
                           <TableRow className="bg-muted/30 hover:bg-muted/30 border-b border-border/40">
                             {!readOnly && (
                               <TableHead className="w-[50px]"></TableHead>
                             )}
-                            <TableHead className="w-[180px] font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4">
+                            <TableHead className={cn(
+                              "font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4",
+                              readOnly ? "w-[120px]" : "w-[140px]"
+                            )}>
                               Time
                             </TableHead>
-                            <TableHead className="font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4">
+                            <TableHead className={cn(
+                              "font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4",
+                              readOnly && "w-[50%]"
+                            )}>
                               Event
                             </TableHead>
-                            <TableHead className="font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4">
+                            <TableHead className={cn(
+                              "font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4",
+                              readOnly && "w-[35%]"
+                            )}>
                               Location
                             </TableHead>
                             {!readOnly && (
-                              <TableHead className="w-[140px] text-center font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4">
+                              <TableHead className="w-[200px] font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4">
+                                Service
+                              </TableHead>
+                            )}
+                            {!readOnly && (
+                              <TableHead className="w-[120px] text-center font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4">
                                 Actions
                               </TableHead>
                             )}
@@ -646,7 +710,7 @@ export function ItineraryEditor({
                           {day.items.length === 0 ? (
                             <TableRow>
                               <TableCell
-                                colSpan={readOnly ? 3 : 5}
+                                colSpan={readOnly ? 3 : 6}
                                 className="text-center py-12"
                               >
                                 <div className="flex flex-col items-center gap-3 text-muted-foreground/50">
@@ -795,7 +859,7 @@ export function ItineraryEditor({
                                       </div>
                                     </TableCell>
                                   )}
-                                  <TableCell className="align-middle px-4">
+                                  <TableCell className={cn("px-4", readOnly ? "align-top" : "align-middle")}>
                                     {readOnly ? (
                                       <div className="py-2 font-medium">
                                         {item.time || "-"}
@@ -815,10 +879,25 @@ export function ItineraryEditor({
                                       />
                                     )}
                                   </TableCell>
-                                  <TableCell className="align-middle px-4">
+                                  <TableCell className={cn("px-4", readOnly ? "align-top" : "align-middle")}>
                                     {readOnly ? (
-                                      <div className="py-2 font-medium">
-                                        {item.event || "-"}
+                                      <div className="py-2">
+                                        <div className="font-medium">
+                                          {item.event || "-"}
+                                        </div>
+                                        {(item.service || item.service_provider) && (
+                                          <div className="text-xs text-muted-foreground mt-1">
+                                            {item.service ? (
+                                              <>
+                                                {item.service.service_providers?.name || item.service_provider?.name}
+                                                {" → "}
+                                                {item.service.name}
+                                              </>
+                                            ) : item.service_provider ? (
+                                              item.service_provider.name
+                                            ) : null}
+                                          </div>
+                                        )}
                                       </div>
                                     ) : (
                                       <Input
@@ -836,27 +915,71 @@ export function ItineraryEditor({
                                       />
                                     )}
                                   </TableCell>
-                                  <TableCell className="align-middle px-4">
+                                  <TableCell className={cn("px-4", readOnly ? "align-top" : "align-middle")}>
                                     {readOnly ? (
                                       <div className="py-2 text-muted-foreground">
-                                        {item.location || "-"}
+                                        {item.is_accommodation_location ? (
+                                          <span className="flex items-center gap-1.5">
+                                            <Home className="h-3.5 w-3.5" />
+                                            {villaName || "Accommodation"}
+                                          </span>
+                                        ) : (
+                                          item.location || "-"
+                                        )}
                                       </div>
                                     ) : (
-                                      <Input
-                                        value={item.location}
-                                        onChange={(e) =>
-                                          updateDayItem(
-                                            dayIndex,
-                                            item.id,
-                                            "location",
-                                            e.target.value
-                                          )
-                                        }
-                                        placeholder="e.g., Airport X"
-                                        className="h-10 bg-transparent border border-input hover:border-border/50 focus:border-ring/50 px-3"
-                                      />
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          type="button"
+                                          variant={item.is_accommodation_location ? "secondary" : "ghost"}
+                                          size="icon"
+                                          className={cn(
+                                            "h-10 w-10 shrink-0",
+                                            item.is_accommodation_location && "bg-primary/10 text-primary"
+                                          )}
+                                          title={item.is_accommodation_location ? "Using accommodation" : "Use accommodation as location"}
+                                          onClick={() => toggleAccommodationLocation(dayIndex, item.id)}
+                                        >
+                                          <Home className="h-4 w-4" />
+                                        </Button>
+                                        {item.is_accommodation_location ? (
+                                          <div className="flex-1 h-10 flex items-center px-3 bg-muted/50 rounded-md text-sm">
+                                            {villaName || "Accommodation"}
+                                          </div>
+                                        ) : (
+                                          <Input
+                                            value={item.location}
+                                            onChange={(e) =>
+                                              updateDayItem(
+                                                dayIndex,
+                                                item.id,
+                                                "location",
+                                                e.target.value
+                                              )
+                                            }
+                                            placeholder="e.g., Airport X"
+                                            className="h-10 bg-transparent border border-input hover:border-border/50 focus:border-ring/50 px-3"
+                                          />
+                                        )}
+                                      </div>
                                     )}
                                   </TableCell>
+                                  {!readOnly && (
+                                    <TableCell className="align-middle px-4">
+                                      <ItemServicePicker
+                                        serviceId={item.service_id}
+                                        service={item.service}
+                                        onServiceChange={(serviceId, service) =>
+                                          updateDayItemService(
+                                            dayIndex,
+                                            item.id,
+                                            serviceId,
+                                            service
+                                          )
+                                        }
+                                      />
+                                    </TableCell>
+                                  )}
                                   {!readOnly && (
                                     <TableCell className="align-middle">
                                       <div className="flex items-center justify-center gap-1">

@@ -158,8 +158,8 @@ export function dayDataToItems(
         location: item.location,
         is_accommodation_location: item.is_accommodation_location || false,
         sort_order: index,
-        service_provider_id: item.service_provider_id || null,
-        service_id: item.service_id || null,
+        service_provider_id: item.service_provider_id || undefined,
+        service_id: item.service_id || undefined,
       };
       items.push(dbItem);
     });

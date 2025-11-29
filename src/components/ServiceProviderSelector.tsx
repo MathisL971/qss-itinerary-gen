@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { Input } from "./ui/input";
-import { Label } from "./ui/label";
 import { searchServiceProviders } from "@/lib/serviceProviderService";
 import type { ServiceProvider } from "@/lib/serviceProviderService";
 import { cn } from "@/lib/utils";

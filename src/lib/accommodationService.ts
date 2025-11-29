@@ -15,8 +15,6 @@ export interface Accommodation {
   updated_at: string;
 }
 
-export type { Accommodation };
-
 export async function getAccommodations(type?: string): Promise<{ data: Accommodation[] | null; error: any }> {
   let query = supabase.from("accommodations").select("*").order("name");
   

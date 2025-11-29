@@ -27,7 +27,7 @@ import { CreateServiceProviderDialog } from "@/components/CreateServiceProviderD
 import { EditServiceProviderDialog } from "@/components/EditServiceProviderDialog";
 import { ManageContactsDialog } from "@/components/ManageContactsDialog";
 import { ManageServicesDialog } from "@/components/ManageServicesDialog";
-import { Edit, Trash2, Search, ExternalLink, Phone, Mail, Users, Package } from "lucide-react";
+import { Edit, Trash2, Search, ExternalLink, Users, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function ServiceProvidersPage() {

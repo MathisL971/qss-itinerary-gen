@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -11,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getStays, type Stay } from "@/lib/stayService";
-import { Plus, Search, Loader2, Calendar } from "lucide-react";
+import { Search, Loader2, Calendar } from "lucide-react";
 import { CreateStayDialog } from "@/components/CreateStayDialog";
 import { EditStayDialog } from "@/components/EditStayDialog";
 import { useNavigate } from "react-router-dom";

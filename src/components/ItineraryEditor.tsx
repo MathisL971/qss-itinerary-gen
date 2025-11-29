@@ -348,7 +348,8 @@ export function ItineraryEditor({
         item.service_provider = {
           id: service.service_providers.id,
           name: service.service_providers.name,
-          policy: (service.service_providers as any)?.policy,
+          policy_en: service.service_providers.policy_en,
+          policy_fr: service.service_providers.policy_fr,
         };
       } else if (!serviceId) {
         // Clear provider if service is cleared

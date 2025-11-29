@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -11,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getAccommodations, searchAccommodations, type Accommodation } from "@/lib/accommodationService";
-import { Plus, Search, Loader2 } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 
 import { CreateAccommodationDialog } from "@/components/CreateAccommodationDialog";
 import { EditAccommodationDialog } from "@/components/EditAccommodationDialog";

@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { escapeLikePattern } from "./utils";
 
 export interface ServiceProvider {
   id: string;
@@ -63,7 +64,7 @@ export async function searchServiceProviders(
     `
     )
     .eq("organization_id", organizationId)
-    .ilike("name", `%${query}%`)
+    .ilike("name", `%${escapeLikePattern(query)}%`)
     .order("name")
     .limit(20);
 

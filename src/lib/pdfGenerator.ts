@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import type { DayData } from "./itineraryService";
 import { extractPolicies } from "./itineraryService";
 import { getTranslations, getClientLanguage } from "./i18n";
+import { logger } from "./logger";
 
 // Helper function to format time (e.g., "14:30" -> "2:30pm")
 function formatTimeForPDF(time: string): string {
@@ -44,7 +45,7 @@ export async function generatePDF(
   accommodationName?: string
 ): Promise<void> {
   if (!arrivalDate || !departureDate) {
-    console.error("Missing dates for PDF generation", {
+    logger.error("Missing dates for PDF generation", {
       arrivalDate,
       departureDate,
     });
@@ -53,7 +54,7 @@ export async function generatePDF(
 
   // Allow PDF generation even with empty dayData - we'll show "no items" for each day
   if (!dayData || dayData.length === 0) {
-    console.warn("No day data provided, generating PDF with empty itinerary");
+    logger.warn("No day data provided, generating PDF with empty itinerary");
   }
 
   // Get translations based on client language
@@ -86,7 +87,7 @@ export async function generatePDF(
       img.onerror = () => resolve();
     });
   } catch (error) {
-    console.error("Error loading logo:", error);
+    logger.error("Error loading logo:", error);
   }
 
   const doc = new jsPDF();
@@ -132,7 +133,7 @@ export async function generatePDF(
       }
     }
   } catch (error) {
-    console.warn("Bodoni 72 font not found, using Times fallback:", error);
+    logger.warn("Bodoni 72 font not found, using Times fallback:", error);
   }
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -503,7 +504,7 @@ export async function generatePDF(
       drawPageNumber(pageNum);
     } catch (error) {
       // If setting the page fails, skip it to avoid drawing on wrong page
-      console.warn(`Could not set page ${pageNum} for numbering:`, error);
+      logger.warn(`Could not set page ${pageNum} for numbering:`, error);
       break; // Stop if we hit an invalid page
     }
   }

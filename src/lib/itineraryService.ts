@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { logger } from "./logger";
 
 export interface DayItem {
   id: string;
@@ -169,7 +170,7 @@ export function dayDataToItems(
   // Debug: log items with service_id
   const itemsWithService = items.filter(i => i.service_id);
   if (itemsWithService.length > 0) {
-    console.log("Items with service_id:", itemsWithService.map(i => ({ event: i.event, service_id: i.service_id })));
+    logger.log("Items with service_id:", itemsWithService.map(i => ({ event: i.event, service_id: i.service_id })));
   }
 
   return items;
@@ -216,7 +217,7 @@ export async function createItinerary(
 
   // Create items
   const items = dayDataToItems(dayData, itinerary.id);
-  console.log(
+  logger.log(
     "Creating itinerary items:",
     items.length,
     "items from",
@@ -231,14 +232,14 @@ export async function createItinerary(
       .select();
 
     if (itemsError) {
-      console.error("Error inserting items:", itemsError);
+      logger.error("Error inserting items:", itemsError);
       // Rollback itinerary creation
       await supabase.from("itineraries").delete().eq("id", itinerary.id);
       return { data: null, error: itemsError };
     }
-    console.log("Successfully inserted", insertedItems?.length || 0, "items");
+    logger.log("Successfully inserted", insertedItems?.length || 0, "items");
   } else {
-    console.warn("No items to insert - dayData might be empty");
+    logger.warn("No items to insert - dayData might be empty");
   }
 
   return { data: itinerary, error: null };
@@ -452,7 +453,7 @@ export async function getSharedItinerary(
     .single();
 
   if (itineraryError) {
-    console.error("Error fetching shared itinerary:", itineraryError);
+    logger.error("Error fetching shared itinerary:", itineraryError);
     // Provide more helpful error messages
     if (itineraryError.code === "PGRST116") {
       return {
@@ -496,7 +497,7 @@ export async function getSharedItinerary(
     .order("sort_order", { ascending: true });
 
   if (itemsError) {
-    console.error("Error fetching shared itinerary items:", itemsError);
+    logger.error("Error fetching shared itinerary items:", itemsError);
     return { data: null, error: itemsError };
   }
 

@@ -3,6 +3,8 @@
  * Extensible translation system for supporting multiple languages
  */
 
+import { logger } from './logger';
+
 export type Language = 'en' | 'fr';
 
 export interface Translations {
@@ -153,7 +155,7 @@ export function t(key: string, language: Language = 'en'): string {
     if (value && typeof value === 'object' && k in value) {
       value = value[k];
     } else {
-      console.warn(`Translation key not found: ${key} for language ${language}`);
+      logger.warn(`Translation key not found: ${key} for language ${language}`);
       return key;
     }
   }

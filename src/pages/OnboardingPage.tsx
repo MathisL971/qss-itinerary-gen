@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { createOrganization } from "@/lib/organizationService";
+import { logger } from "@/lib/logger";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,7 +49,7 @@ export function OnboardingPage() {
       }
     } catch (err) {
       setError("An unexpected error occurred");
-      console.error("Error creating organization:", err);
+      logger.error("Error creating organization:", err);
     } finally {
       setLoading(false);
     }

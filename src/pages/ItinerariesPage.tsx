@@ -24,6 +24,7 @@ import {
 import { generatePDF } from "@/lib/pdfGenerator";
 import { parseLocalDate } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { logger } from "@/lib/logger";
 
 export function ItinerariesPage() {
   const { currentOrganization } = useAuth();
@@ -78,7 +79,7 @@ export function ItinerariesPage() {
 
   const handleExportPDF = async (itineraryId: string) => {
     try {
-      console.log("Exporting PDF for itinerary:", itineraryId);
+      logger.log("Exporting PDF for itinerary:", itineraryId);
 
       setGeneratingPDF(itineraryId);
 
@@ -115,7 +116,7 @@ export function ItinerariesPage() {
         accommodationName
       );
     } catch (error) {
-      console.error("Error exporting PDF:", error);
+      logger.error("Error exporting PDF:", error);
       alert("Failed to export PDF. Please try again.");
     } finally {
       setGeneratingPDF(null);

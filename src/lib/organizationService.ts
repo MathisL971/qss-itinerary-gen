@@ -103,8 +103,12 @@ export async function createOrganization(
     .replace(/(^-|-$)/g, "")
     .substring(0, 50);
 
-  // Add a random suffix to ensure uniqueness
-  const uniqueSlug = `${slug}-${Math.random().toString(36).substring(2, 8)}`;
+  // Add a cryptographically random suffix to ensure uniqueness
+  const randomBytes = crypto.getRandomValues(new Uint8Array(4));
+  const randomSuffix = Array.from(randomBytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  const uniqueSlug = `${slug}-${randomSuffix}`;
 
   // Use the database function to create org and add owner atomically
   const { data, error } = await supabase

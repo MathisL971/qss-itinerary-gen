@@ -20,6 +20,7 @@ import { generatePDF } from "@/lib/pdfGenerator";
 import { supabase } from "@/lib/supabase";
 import { ClipLoader } from "react-spinners";
 import { parseLocalDate } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 export function StayDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -131,7 +132,7 @@ export function StayDetailPage() {
 
   const handleExportPDF = async () => {
     if (!itineraryData) {
-      console.error("No itinerary data available");
+      logger.error("No itinerary data available");
       alert(
         "No itinerary data available. Please ensure the stay has an itinerary."
       );
@@ -139,13 +140,13 @@ export function StayDetailPage() {
     }
 
     if (!stay) {
-      console.error("No stay data available");
+      logger.error("No stay data available");
       alert("No stay data available.");
       return;
     }
 
     if (!itineraryData.arrivalDate || !itineraryData.departureDate) {
-      console.error("Missing dates", {
+      logger.error("Missing dates", {
         arrivalDate: itineraryData.arrivalDate,
         departureDate: itineraryData.departureDate,
       });
@@ -156,7 +157,7 @@ export function StayDetailPage() {
     }
 
     if (!itineraryData.dayData || itineraryData.dayData.length === 0) {
-      console.warn(
+      logger.warn(
         "No day data available, but proceeding with empty itinerary"
       );
       // Allow PDF generation even with empty dayData - the PDF generator handles this
@@ -174,7 +175,7 @@ export function StayDetailPage() {
         stay.accommodation?.name
       );
     } catch (error) {
-      console.error("Error exporting PDF:", error);
+      logger.error("Error exporting PDF:", error);
       alert(
         `Failed to export PDF: ${
           error instanceof Error ? error.message : "Unknown error"

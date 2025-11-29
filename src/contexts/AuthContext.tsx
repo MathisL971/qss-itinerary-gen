@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 import { supabase, siteUrl } from "@/lib/supabase";
 import { getUserOrganizations } from "@/lib/organizationService";
 import type { OrganizationWithRole } from "@/lib/organizationService";
+import { logger } from "@/lib/logger";
 
 type User = Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"];
 type Session = Awaited<
@@ -53,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await getUserOrganizations();
       if (error) {
-        console.error("Error fetching organizations:", error);
+        logger.error("Error fetching organizations:", error);
         setOrganizations([]);
         setCurrentOrganization(null);
         return;
@@ -75,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setCurrentOrganization(null);
       }
     } catch (err) {
-      console.error("Error in fetchOrganizations:", err);
+      logger.error("Error in fetchOrganizations:", err);
       setOrganizations([]);
       setCurrentOrganization(null);
     } finally {

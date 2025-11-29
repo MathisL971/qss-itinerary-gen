@@ -31,8 +31,20 @@ export function parseLocalDate(dateString: string): Date {
   return new Date(year, month, day);
 }
 
-
-
-
+/**
+ * Escape special characters in a string for use in SQL LIKE patterns.
+ * This prevents user input from being interpreted as wildcard characters.
+ * @param input - User input string to escape
+ * @returns Escaped string safe for use in LIKE patterns
+ */
+export function escapeLikePattern(input: string): string {
+  if (!input) return '';
+  // Escape the special LIKE pattern characters: %, _, and \
+  // The backslash must be escaped first to avoid double-escaping
+  return input
+    .replace(/\\/g, '\\\\')  // Escape backslashes first
+    .replace(/%/g, '\\%')    // Escape percent signs
+    .replace(/_/g, '\\_');   // Escape underscores
+}
 
 

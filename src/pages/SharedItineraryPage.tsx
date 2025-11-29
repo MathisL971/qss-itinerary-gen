@@ -10,6 +10,7 @@ import {
 } from "@/lib/itineraryService";
 import { parseLocalDate } from "@/lib/utils";
 import { getTranslations, getClientLanguage, type Language } from "@/lib/i18n";
+import { logger } from "@/lib/logger";
 
 export function SharedItineraryPage() {
   const { token } = useParams();
@@ -47,7 +48,7 @@ export function SharedItineraryPage() {
       const { data, error: err } = await getSharedItinerary(shareToken);
 
       if (err) {
-        console.error("Error loading shared itinerary:", err);
+        logger.error("Error loading shared itinerary:", err);
         setError(
           err.message ||
             err.details ||
@@ -94,7 +95,7 @@ export function SharedItineraryPage() {
 
       setLoading(false);
     } catch (err: any) {
-      console.error("Unexpected error loading shared itinerary:", err);
+      logger.error("Unexpected error loading shared itinerary:", err);
       setError("An unexpected error occurred. Please try again later.");
       setLoading(false);
     }

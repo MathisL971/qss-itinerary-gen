@@ -30,7 +30,13 @@ export function OnboardingPage() {
       );
 
       if (createError) {
-        setError(createError.message || "Failed to create organization");
+        const errorMessage =
+          typeof createError === "object" &&
+          createError !== null &&
+          "message" in createError
+            ? (createError as { message: string }).message
+            : "Failed to create organization";
+        setError(errorMessage);
         return;
       }
 
@@ -138,13 +144,10 @@ export function OnboardingPage() {
           </form>
 
           <div className="mt-6 pt-6 border-t border-slate-200 text-center">
-            <p className="text-xs text-slate-500">
-              Signed in as {user?.email}
-            </p>
+            <p className="text-xs text-slate-500">Signed in as {user?.email}</p>
           </div>
         </div>
       </div>
     </div>
   );
 }
-

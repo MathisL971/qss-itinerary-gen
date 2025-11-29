@@ -4,6 +4,7 @@ import { Label } from "./ui/label";
 import { getStays } from "@/lib/stayService";
 import type { Stay } from "@/lib/stayService";
 import { cn, parseLocalDate } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface StaySelectorProps {
   value?: string; // stay ID
@@ -17,6 +18,7 @@ export function StaySelector({
   initialValue = "",
   className,
 }: StaySelectorProps) {
+  const { currentOrganization } = useAuth();
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(initialValue);
   const [stays, setStays] = useState<Stay[]>([]);
@@ -28,13 +30,14 @@ export function StaySelector({
 
   useEffect(() => {
     const loadStays = async () => {
-      const { data } = await getStays();
+      if (!currentOrganization) return;
+      const { data } = await getStays(currentOrganization.id);
       if (data) {
         setStays(data);
       }
     };
     loadStays();
-  }, []);
+  }, [currentOrganization]);
 
   const filteredStays = stays.filter((stay) => {
     if (!searchTerm) return true;

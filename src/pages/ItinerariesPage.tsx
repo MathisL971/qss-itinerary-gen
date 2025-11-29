@@ -23,8 +23,10 @@ import {
 } from "@/lib/itineraryService";
 import { generatePDF } from "@/lib/pdfGenerator";
 import { parseLocalDate } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function ItinerariesPage() {
+  const { currentOrganization } = useAuth();
   const [itineraries, setItineraries] = useState<Itinerary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -34,13 +36,16 @@ export function ItinerariesPage() {
   const [generatingPDF, setGeneratingPDF] = useState<string | null>(null);
 
   useEffect(() => {
-    loadItineraries();
-  }, []);
+    if (currentOrganization) {
+      loadItineraries();
+    }
+  }, [currentOrganization]);
 
   const loadItineraries = async () => {
+    if (!currentOrganization) return;
     setLoading(true);
     setError("");
-    const { data, error: err } = await getUserItineraries();
+    const { data, error: err } = await getUserItineraries(currentOrganization.id);
     if (err) {
       setError(err.message || "Failed to load itineraries");
     } else {

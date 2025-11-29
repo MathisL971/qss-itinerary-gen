@@ -14,10 +14,12 @@ import {
 import { getStayById } from "@/lib/stayService";
 import { supabase } from "@/lib/supabase";
 import { parseLocalDate } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function EditItineraryPage() {
   const { stayId } = useParams<{ stayId: string }>();
   const navigate = useNavigate();
+  const { currentOrganization } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -128,7 +130,14 @@ export function EditItineraryPage() {
       }
     } else {
       // Create new itinerary
+      if (!currentOrganization) {
+        setError("No organization selected");
+        setSaving(false);
+        return;
+      }
+
       const { data, error: err } = await createItinerary(
+        currentOrganization.id,
         stayId,
         editorData.dayData
       );

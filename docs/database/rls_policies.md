@@ -10,25 +10,27 @@
 ## Helper Functions
 
 ### `user_has_org_access(org_id UUID)`
+
 Returns `TRUE` if the current user (`auth.uid()`) is a member of the specified organization.
 
 ```sql
 CREATE FUNCTION user_has_org_access(org_id UUID) RETURNS BOOLEAN AS $$
   SELECT EXISTS (
-    SELECT 1 FROM organization_members 
+    SELECT 1 FROM organization_members
     WHERE organization_id = org_id AND user_id = auth.uid()
   );
 $$ LANGUAGE SQL SECURITY DEFINER;
 ```
 
 ### `user_is_org_owner(org_id UUID)`
+
 Returns `TRUE` if the current user is an **owner** of the specified organization.
 
 ```sql
 CREATE FUNCTION user_is_org_owner(org_id UUID) RETURNS BOOLEAN AS $$
   SELECT EXISTS (
-    SELECT 1 FROM organization_members 
-    WHERE organization_id = org_id 
+    SELECT 1 FROM organization_members
+    WHERE organization_id = org_id
     AND user_id = auth.uid()
     AND role = 'owner'
   );
@@ -39,112 +41,113 @@ $$ LANGUAGE SQL SECURITY DEFINER;
 
 ### `organizations`
 
-| Operation | Policy |
-|-----------|--------|
-| SELECT | Users can view organizations they belong to |
-| INSERT | Authenticated users can create organizations |
-| UPDATE | Organization owners only |
-| DELETE | Organization owners only |
+| Operation | Policy                                       |
+| --------- | -------------------------------------------- |
+| SELECT    | Users can view organizations they belong to  |
+| INSERT    | Authenticated users can create organizations |
+| UPDATE    | Organization owners only                     |
+| DELETE    | Organization owners only                     |
 
 ### `organization_members`
 
-| Operation | Policy |
-|-----------|--------|
-| SELECT | Members can view other members of their organizations |
-| INSERT | Owners can add members; users can add themselves as owner of a new org |
-| UPDATE | Owners only |
-| DELETE | Owners can remove anyone; members can remove themselves |
+| Operation | Policy                                                                 |
+| --------- | ---------------------------------------------------------------------- |
+| SELECT    | Members can view other members of their organizations                  |
+| INSERT    | Owners can add members; users can add themselves as owner of a new org |
+| UPDATE    | Owners only                                                            |
+| DELETE    | Owners can remove anyone; members can remove themselves                |
 
 ### `clients`
 
-| Operation | Policy |
-|-----------|--------|
-| SELECT | Organization members can view |
-| INSERT | Organization members can create (must include valid `organization_id`) |
-| UPDATE | Organization members can update |
-| DELETE | Organization members can delete |
+| Operation | Policy                                                                 |
+| --------- | ---------------------------------------------------------------------- |
+| SELECT    | Organization members can view                                          |
+| INSERT    | Organization members can create (must include valid `organization_id`) |
+| UPDATE    | Organization members can update                                        |
+| DELETE    | Organization members can delete                                        |
 
 ### `accommodations`
 
-| Operation | Policy |
-|-----------|--------|
-| SELECT | Organization members can view |
-| INSERT | Organization members can create |
-| UPDATE | Organization members can update |
-| DELETE | Organization members can delete |
+| Operation | Policy                          |
+| --------- | ------------------------------- |
+| SELECT    | Organization members can view   |
+| INSERT    | Organization members can create |
+| UPDATE    | Organization members can update |
+| DELETE    | Organization members can delete |
 
 ### `stays`
 
-| Operation | Policy |
-|-----------|--------|
-| SELECT | Organization members can view |
-| INSERT | Organization members can create |
-| UPDATE | Organization members can update |
-| DELETE | Organization members can delete |
+| Operation | Policy                          |
+| --------- | ------------------------------- |
+| SELECT    | Organization members can view   |
+| INSERT    | Organization members can create |
+| UPDATE    | Organization members can update |
+| DELETE    | Organization members can delete |
 
 ### `itineraries`
 
-| Operation | Policy |
-|-----------|--------|
-| SELECT | Organization members can view; **Public access via `share_token`** |
-| INSERT | Organization members can create |
-| UPDATE | Organization members can update |
-| DELETE | Organization members can delete |
+| Operation | Policy                                                             |
+| --------- | ------------------------------------------------------------------ |
+| SELECT    | Organization members can view; **Public access via `share_token`** |
+| INSERT    | Organization members can create                                    |
+| UPDATE    | Organization members can update                                    |
+| DELETE    | Organization members can delete                                    |
 
 ### `itinerary_items`
 
-| Operation | Policy |
-|-----------|--------|
-| SELECT | Members can view items for their org's itineraries; Public access for shared itineraries |
-| INSERT | Members can insert items to their org's itineraries |
-| UPDATE | Members can update items in their org's itineraries |
-| DELETE | Members can delete items from their org's itineraries |
+| Operation | Policy                                                                                   |
+| --------- | ---------------------------------------------------------------------------------------- |
+| SELECT    | Members can view items for their org's itineraries; Public access for shared itineraries |
+| INSERT    | Members can insert items to their org's itineraries                                      |
+| UPDATE    | Members can update items in their org's itineraries                                      |
+| DELETE    | Members can delete items from their org's itineraries                                    |
 
-*Access is determined by joining to `itineraries` and checking `organization_id`.*
+_Access is determined by joining to `itineraries` and checking `organization_id`._
 
 ### `service_categories`
 
-| Operation | Policy |
-|-----------|--------|
-| SELECT | Organization members can view |
-| INSERT | Organization members can create |
-| UPDATE | Organization members can update |
-| DELETE | Organization members can delete |
+| Operation | Policy                          |
+| --------- | ------------------------------- |
+| SELECT    | Organization members can view   |
+| INSERT    | Organization members can create |
+| UPDATE    | Organization members can update |
+| DELETE    | Organization members can delete |
 
 ### `service_providers`
 
-| Operation | Policy |
-|-----------|--------|
-| SELECT | Organization members can view |
-| INSERT | Organization members can create |
-| UPDATE | Organization members can update |
-| DELETE | Organization members can delete |
+| Operation | Policy                          |
+| --------- | ------------------------------- |
+| SELECT    | Organization members can view   |
+| INSERT    | Organization members can create |
+| UPDATE    | Organization members can update |
+| DELETE    | Organization members can delete |
 
 ### `service_provider_contacts`
 
-| Operation | Policy |
-|-----------|--------|
-| SELECT | Members can view contacts for their org's providers |
-| INSERT | Members can create contacts for their org's providers |
-| UPDATE | Members can update contacts for their org's providers |
-| DELETE | Members can delete contacts from their org's providers |
+| Operation | Policy                                                 |
+| --------- | ------------------------------------------------------ |
+| SELECT    | Members can view contacts for their org's providers    |
+| INSERT    | Members can create contacts for their org's providers  |
+| UPDATE    | Members can update contacts for their org's providers  |
+| DELETE    | Members can delete contacts from their org's providers |
 
-*Access is determined by joining to `service_providers` and checking `organization_id`.*
+_Access is determined by joining to `service_providers` and checking `organization_id`._
 
 ### `services`
 
-| Operation | Policy |
-|-----------|--------|
-| SELECT | Members can view services for their org's providers |
-| INSERT | Members can create services for their org's providers |
-| UPDATE | Members can update services for their org's providers |
-| DELETE | Members can delete services from their org's providers |
+| Operation | Policy                                                 |
+| --------- | ------------------------------------------------------ |
+| SELECT    | Members can view services for their org's providers    |
+| INSERT    | Members can create services for their org's providers  |
+| UPDATE    | Members can update services for their org's providers  |
+| DELETE    | Members can delete services from their org's providers |
 
-*Access is determined by joining to `service_providers` and checking `organization_id`.*
+_Access is determined by joining to `service_providers` and checking `organization_id`._
 
 ## Policy Implementation Examples
 
 ### Direct Organization Check
+
 ```sql
 -- For tables with organization_id column
 CREATE POLICY "Org members can view clients" ON clients
@@ -152,6 +155,7 @@ CREATE POLICY "Org members can view clients" ON clients
 ```
 
 ### Indirect Organization Check (via parent table)
+
 ```sql
 -- For child tables without organization_id
 CREATE POLICY "Org members can view itinerary_items" ON itinerary_items
@@ -165,6 +169,7 @@ CREATE POLICY "Org members can view itinerary_items" ON itinerary_items
 ```
 
 ### Public Access for Shared Resources
+
 ```sql
 -- Allow public access to shared itineraries
 CREATE POLICY "Public can view shared itineraries" ON itineraries

@@ -26,11 +26,6 @@ export interface OrganizationWithRole extends Organization {
 /**
  * Get all organizations the current user belongs to
  */
-interface OrgMemberWithOrg {
-  role: "owner" | "member";
-  organization: Organization;
-}
-
 export async function getUserOrganizations(): Promise<{
   data: OrganizationWithRole[] | null;
   error: unknown;
@@ -58,9 +53,10 @@ export async function getUserOrganizations(): Promise<{
   }
 
   // Transform the data to flatten the structure
-  const organizations: OrganizationWithRole[] = (
-    (data || []) as OrgMemberWithOrg[]
-  )
+  // Supabase returns organization as an object for single relations
+  // Cast to unknown first to handle Supabase's complex typing
+  type OrgMemberRow = { role: "owner" | "member"; organization: Organization };
+  const organizations: OrganizationWithRole[] = ((data || []) as unknown as OrgMemberRow[])
     .filter((item) => item.organization)
     .map((item) => ({
       ...item.organization,

@@ -69,7 +69,10 @@ export function OrganizationSettingsPage() {
     });
 
     if (updateError) {
-      setError(updateError.message || "Failed to update organization name");
+      const errorMessage = typeof updateError === 'object' && updateError !== null && 'message' in updateError
+        ? (updateError as { message: string }).message
+        : "Failed to update organization name";
+      setError(errorMessage);
     } else {
       setSuccess("Organization name updated successfully");
       await refreshOrganizations();
@@ -78,7 +81,7 @@ export function OrganizationSettingsPage() {
     setSaving(false);
   };
 
-  const handleRemoveMember = async (memberId: string, memberUserId: string) => {
+  const handleRemoveMember = async (_memberId: string, memberUserId: string) => {
     if (!currentOrganization) return;
     
     if (!confirm("Are you sure you want to remove this member?")) return;
@@ -86,14 +89,17 @@ export function OrganizationSettingsPage() {
     const { error: removeError } = await removeMember(currentOrganization.id, memberUserId);
     
     if (removeError) {
-      setError(removeError.message || "Failed to remove member");
+      const errorMessage = typeof removeError === 'object' && removeError !== null && 'message' in removeError
+        ? (removeError as { message: string }).message
+        : "Failed to remove member";
+      setError(errorMessage);
     } else {
       setSuccess("Member removed successfully");
       loadData();
     }
   };
 
-  const handleToggleRole = async (memberId: string, memberUserId: string, currentRole: string) => {
+  const handleToggleRole = async (_memberId: string, memberUserId: string, currentRole: string) => {
     if (!currentOrganization) return;
     
     const newRole = currentRole === "owner" ? "member" : "owner";
@@ -114,7 +120,10 @@ export function OrganizationSettingsPage() {
     );
 
     if (updateError) {
-      setError(updateError.message || "Failed to update member role");
+      const errorMessage = typeof updateError === 'object' && updateError !== null && 'message' in updateError
+        ? (updateError as { message: string }).message
+        : "Failed to update member role";
+      setError(errorMessage);
     } else {
       setSuccess(`Member role updated to ${newRole}`);
       loadData();
@@ -344,7 +353,10 @@ export function OrganizationSettingsPage() {
                       user.id
                     );
                     if (leaveError) {
-                      setError(leaveError.message || "Failed to leave organization");
+                      const errorMessage = typeof leaveError === 'object' && leaveError !== null && 'message' in leaveError
+                        ? (leaveError as { message: string }).message
+                        : "Failed to leave organization";
+                      setError(errorMessage);
                     } else {
                       await refreshOrganizations();
                     }

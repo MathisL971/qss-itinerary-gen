@@ -29,6 +29,7 @@ import { ManageContactsDialog } from "@/components/ManageContactsDialog";
 import { ManageServicesDialog } from "@/components/ManageServicesDialog";
 import { Edit, Trash2, Search, ExternalLink, Users, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function ServiceProvidersPage() {
   const [activeTab, setActiveTab] = useState<"providers" | "categories">("providers");
@@ -77,6 +78,7 @@ export function ServiceProvidersPage() {
 }
 
 function ProvidersTab() {
+  const { currentOrganization } = useAuth();
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
   const [search, setSearch] = useState("");
   const [editingProvider, setEditingProvider] = useState<ServiceProvider | null>(null);
@@ -87,11 +89,13 @@ function ProvidersTab() {
   const [servicesOpen, setServicesOpen] = useState(false);
 
   const loadProviders = async () => {
+    if (!currentOrganization) return;
+    
     if (search) {
-        const { data } = await searchServiceProviders(search);
+        const { data } = await searchServiceProviders(currentOrganization.id, search);
         if (data) setProviders(data);
     } else {
-        const { data } = await getServiceProviders();
+        const { data } = await getServiceProviders(currentOrganization.id);
         if (data) setProviders(data);
     }
   };
@@ -101,7 +105,7 @@ function ProvidersTab() {
       loadProviders();
     }, 300);
     return () => clearTimeout(delayDebounceFn);
-  }, [search]);
+  }, [search, currentOrganization]);
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this provider?")) {
@@ -255,18 +259,21 @@ function ProvidersTab() {
 }
 
 function CategoriesTab() {
+  const { currentOrganization } = useAuth();
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
   const [editingCategory, setEditingCategory] = useState<ServiceCategory | null>(null);
   const [editOpen, setEditOpen] = useState(false);
 
   const loadCategories = async () => {
-    const { data } = await getServiceCategories();
+    if (!currentOrganization) return;
+    
+    const { data } = await getServiceCategories(currentOrganization.id);
     if (data) setCategories(data);
   };
 
   useEffect(() => {
     loadCategories();
-  }, []);
+  }, [currentOrganization]);
 
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this category?")) {
@@ -344,4 +351,3 @@ function CategoriesTab() {
     </div>
   );
 }
-

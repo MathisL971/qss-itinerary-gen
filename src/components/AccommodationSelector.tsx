@@ -4,6 +4,7 @@ import { Label } from "./ui/label";
 import { searchAccommodations } from "@/lib/accommodationService";
 import type { Accommodation } from "@/lib/accommodationService";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AccommodationSelectorProps {
   value?: string; // accommodation ID
@@ -19,6 +20,7 @@ export function AccommodationSelector({
   className,
   readOnly = false,
 }: AccommodationSelectorProps) {
+  const { currentOrganization } = useAuth();
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(initialName);
   const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
@@ -29,10 +31,10 @@ export function AccommodationSelector({
   }, [initialName]);
 
   useEffect(() => {
-    if (readOnly) return;
+    if (readOnly || !currentOrganization) return;
     const delayDebounceFn = setTimeout(() => {
       if (searchTerm) {
-        searchAccommodations(searchTerm).then(({ data }) => {
+        searchAccommodations(currentOrganization.id, searchTerm).then(({ data }) => {
           if (data) setAccommodations(data);
         });
       } else {
@@ -41,7 +43,7 @@ export function AccommodationSelector({
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, readOnly]);
+  }, [searchTerm, readOnly, currentOrganization]);
 
   const handleSelect = (accommodation: Accommodation) => {
     if (readOnly) return;

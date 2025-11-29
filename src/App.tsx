@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { LoginPage } from "@/pages/LoginPage";
 import { SignUpPage } from "@/pages/SignUpPage";
+import { OnboardingPage } from "@/pages/OnboardingPage";
 import { ClientsPage } from "@/pages/ClientsPage";
 import { AccommodationsPage } from "@/pages/AccommodationsPage";
 import { ServiceProvidersPage } from "@/pages/ServiceProvidersPage";
@@ -11,11 +12,12 @@ import { StaysPage } from "@/pages/StaysPage";
 import { StayDetailPage } from "@/pages/StayDetailPage";
 import { EditItineraryPage } from "@/pages/EditItineraryPage";
 import { SharedItineraryPage } from "@/pages/SharedItineraryPage";
+import { OrganizationSettingsPage } from "@/pages/OrganizationSettingsPage";
 
 function AppRoutes() {
-  const { user, loading } = useAuth();
+  const { user, loading, organizationsLoading, needsOnboarding } = useAuth();
 
-  if (loading) {
+  if (loading || organizationsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-4">
@@ -32,7 +34,11 @@ function AppRoutes() {
         path="/"
         element={
           user ? (
-            <Navigate to="/stays" replace />
+            needsOnboarding ? (
+              <Navigate to="/onboarding" replace />
+            ) : (
+              <Navigate to="/stays" replace />
+            )
           ) : (
             <Navigate to="/login" replace />
           )
@@ -40,6 +46,20 @@ function AppRoutes() {
       />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignUpPage />} />
+      <Route
+        path="/onboarding"
+        element={
+          user ? (
+            needsOnboarding ? (
+              <OnboardingPage />
+            ) : (
+              <Navigate to="/stays" replace />
+            )
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
       <Route
         path="/stays"
         element={
@@ -85,6 +105,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ServiceProvidersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/organization"
+        element={
+          <ProtectedRoute>
+            <OrganizationSettingsPage />
           </ProtectedRoute>
         }
       />

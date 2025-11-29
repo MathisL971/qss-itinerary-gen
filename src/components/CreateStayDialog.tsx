@@ -26,12 +26,14 @@ import {
 import type { Client } from "@/lib/clientService";
 import type { Accommodation } from "@/lib/accommodationService";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CreateStayDialogProps {
   onStayCreated: () => void;
 }
 
 export function CreateStayDialog({ onStayCreated }: CreateStayDialogProps) {
+  const { currentOrganization } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -56,11 +58,11 @@ export function CreateStayDialog({ onStayCreated }: CreateStayDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clientId || !accommodationId || !arrivalDate || !departureDate || !clientName || !accommodationName) return;
+    if (!clientId || !accommodationId || !arrivalDate || !departureDate || !clientName || !accommodationName || !currentOrganization) return;
 
     setLoading(true);
     // Create stay
-    const { data: stay, error: stayError } = await createStay({
+    const { data: stay, error: stayError } = await createStay(currentOrganization.id, {
       client_id: clientId,
       accommodation_id: accommodationId,
       arrival_date: arrivalDate,
@@ -76,6 +78,7 @@ export function CreateStayDialog({ onStayCreated }: CreateStayDialogProps) {
 
     // Automatically create an empty itinerary for this stay
     const { error: itineraryError } = await createItinerary(
+      currentOrganization.id,
       stay.id,
       [] // Empty dayData
     );
@@ -182,7 +185,7 @@ export function CreateStayDialog({ onStayCreated }: CreateStayDialogProps) {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || !currentOrganization}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Stay
             </Button>
@@ -192,4 +195,3 @@ export function CreateStayDialog({ onStayCreated }: CreateStayDialogProps) {
     </Dialog>
   );
 }
-

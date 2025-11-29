@@ -2,6 +2,7 @@ import { supabase } from "./supabase";
 
 export interface Client {
   id: string;
+  organization_id: string;
   name: string;
   email?: string;
   phone?: string;
@@ -12,24 +13,27 @@ export interface Client {
   updated_at: string;
 }
 
-export async function getClients(): Promise<{
+export async function getClients(organizationId: string): Promise<{
   data: Client[] | null;
   error: any;
 }> {
   const { data, error } = await supabase
     .from("clients")
     .select("*")
+    .eq("organization_id", organizationId)
     .order("name");
 
   return { data, error };
 }
 
 export async function searchClients(
+  organizationId: string,
   query: string
 ): Promise<{ data: Client[] | null; error: any }> {
   const { data, error } = await supabase
     .from("clients")
     .select("*")
+    .eq("organization_id", organizationId)
     .ilike("name", `%${query}%`)
     .order("name")
     .limit(10);
@@ -38,11 +42,12 @@ export async function searchClients(
 }
 
 export async function createClient(
-  client: Omit<Client, "id" | "created_at" | "updated_at">
+  organizationId: string,
+  client: Omit<Client, "id" | "organization_id" | "created_at" | "updated_at">
 ): Promise<{ data: Client | null; error: any }> {
   const { data, error } = await supabase
     .from("clients")
-    .insert(client)
+    .insert({ ...client, organization_id: organizationId })
     .select()
     .single();
 
@@ -51,7 +56,7 @@ export async function createClient(
 
 export async function updateClient(
   id: string,
-  updates: Partial<Client>
+  updates: Partial<Omit<Client, "id" | "organization_id" | "created_at" | "updated_at">>
 ): Promise<{ data: Client | null; error: any }> {
   const { data, error } = await supabase
     .from("clients")

@@ -11,26 +11,32 @@ import {
 } from "@/components/ui/table";
 import { getClients, searchClients, type Client } from "@/lib/clientService";
 import { Search, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 import { CreateClientDialog } from "@/components/CreateClientDialog";
 import { EditClientDialog } from "@/components/EditClientDialog";
 
 export function ClientsPage() {
+  const { currentOrganization } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    loadClients();
-  }, [search]);
+    if (currentOrganization) {
+      loadClients();
+    }
+  }, [search, currentOrganization]);
 
   const loadClients = async () => {
+    if (!currentOrganization) return;
+    
     setLoading(true);
     if (search) {
-      const { data } = await searchClients(search);
+      const { data } = await searchClients(currentOrganization.id, search);
       if (data) setClients(data);
     } else {
-      const { data } = await getClients();
+      const { data } = await getClients(currentOrganization.id);
       if (data) setClients(data);
     }
     setLoading(false);
@@ -98,4 +104,3 @@ export function ClientsPage() {
     </Layout>
   );
 }
-

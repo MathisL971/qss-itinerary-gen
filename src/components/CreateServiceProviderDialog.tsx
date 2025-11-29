@@ -15,6 +15,7 @@ import { createServiceProvider } from "@/lib/serviceProviderService";
 import { ServiceCategorySelector } from "./ServiceCategorySelector";
 import { Plus, Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CreateServiceProviderDialogProps {
   onProviderCreated: () => void;
@@ -23,6 +24,7 @@ interface CreateServiceProviderDialogProps {
 export function CreateServiceProviderDialog({
   onProviderCreated,
 }: CreateServiceProviderDialogProps) {
+  const { currentOrganization } = useAuth();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -38,10 +40,10 @@ export function CreateServiceProviderDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name) return;
+    if (!name || !currentOrganization) return;
 
     setLoading(true);
-    const { error } = await createServiceProvider({
+    const { error } = await createServiceProvider(currentOrganization.id, {
       name,
       category_id: categoryId || undefined,
       description,
@@ -187,7 +189,7 @@ export function CreateServiceProviderDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || !currentOrganization}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create
             </Button>

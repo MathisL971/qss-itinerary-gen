@@ -2,6 +2,7 @@ import { supabase } from "./supabase";
 
 export interface ServiceCategory {
   id: string;
+  organization_id: string;
   name: string;
   description?: string;
   icon?: string;
@@ -9,24 +10,26 @@ export interface ServiceCategory {
   updated_at: string;
 }
 
-export async function getServiceCategories(): Promise<{
+export async function getServiceCategories(organizationId: string): Promise<{
   data: ServiceCategory[] | null;
   error: any;
 }> {
   const { data, error } = await supabase
     .from("service_categories")
     .select("*")
+    .eq("organization_id", organizationId)
     .order("name");
 
   return { data, error };
 }
 
 export async function createServiceCategory(
-  category: Omit<ServiceCategory, "id" | "created_at" | "updated_at">
+  organizationId: string,
+  category: Omit<ServiceCategory, "id" | "organization_id" | "created_at" | "updated_at">
 ): Promise<{ data: ServiceCategory | null; error: any }> {
   const { data, error } = await supabase
     .from("service_categories")
-    .insert(category)
+    .insert({ ...category, organization_id: organizationId })
     .select()
     .single();
 
@@ -35,7 +38,7 @@ export async function createServiceCategory(
 
 export async function updateServiceCategory(
   id: string,
-  updates: Partial<ServiceCategory>
+  updates: Partial<Omit<ServiceCategory, "id" | "organization_id" | "created_at" | "updated_at">>
 ): Promise<{ data: ServiceCategory | null; error: any }> {
   const { data, error } = await supabase
     .from("service_categories")
@@ -52,4 +55,3 @@ export async function deleteServiceCategory(id: string): Promise<{ error: any }>
 
   return { error };
 }
-

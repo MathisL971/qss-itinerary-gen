@@ -36,6 +36,7 @@ export interface DayData {
 
 export interface Itinerary {
   id: string;
+  organization_id: string;
   user_id: string;
   stay_id: string;
   share_token: string;
@@ -175,6 +176,7 @@ export function dayDataToItems(
 }
 
 export async function createItinerary(
+  organizationId: string,
   stayId: string,
   dayData: DayData[]
 ): Promise<{ data: Itinerary | null; error: any }> {
@@ -190,12 +192,17 @@ export async function createItinerary(
     return { data: null, error: { message: "stayId is required" } };
   }
 
+  if (!organizationId) {
+    return { data: null, error: { message: "organizationId is required" } };
+  }
+
   const shareToken = crypto.randomUUID();
 
   // Create itinerary (only stay_id and share_token)
   const { data: itinerary, error: itineraryError } = await supabase
     .from("itineraries")
     .insert({
+      organization_id: organizationId,
       user_id: user.id,
       stay_id: stayId,
       share_token: shareToken,
@@ -249,14 +256,13 @@ export async function updateItinerary(
     return { error: { message: "User not authenticated" } };
   }
 
-  // Update itinerary (only updated_at, stay_id cannot change)
+  // Update itinerary (only updated_at, stay_id cannot change) - RLS handles org access
   const { error: itineraryError } = await supabase
     .from("itineraries")
     .update({
       updated_at: new Date().toISOString(),
     })
-    .eq("id", itineraryId)
-    .eq("user_id", user.id);
+    .eq("id", itineraryId);
 
   if (itineraryError) {
     return { error: itineraryError };
@@ -298,7 +304,7 @@ export async function deleteItinerary(
     return { error: { message: "User not authenticated" } };
   }
 
-  // Delete items first (foreign key constraint)
+  // Delete items first (foreign key constraint) - RLS handles org access
   const { error: itemsError } = await supabase
     .from("itinerary_items")
     .delete()
@@ -308,17 +314,16 @@ export async function deleteItinerary(
     return { error: itemsError };
   }
 
-  // Delete itinerary
+  // Delete itinerary - RLS handles org access
   const { error: itineraryError } = await supabase
     .from("itineraries")
     .delete()
-    .eq("id", itineraryId)
-    .eq("user_id", user.id);
+    .eq("id", itineraryId);
 
   return { error: itineraryError };
 }
 
-export async function getUserItineraries(): Promise<{
+export async function getUserItineraries(organizationId: string): Promise<{
   data: Itinerary[] | null;
   error: any;
 }> {
@@ -345,7 +350,7 @@ export async function getUserItineraries(): Promise<{
       )
     `
     )
-    .eq("user_id", user.id)
+    .eq("organization_id", organizationId)
     .order("created_at", { ascending: false });
 
   return { data, error };
@@ -362,7 +367,7 @@ export async function getItineraryById(
     return { data: null, error: { message: "User not authenticated" } };
   }
 
-  // Get itinerary with stay data
+  // Get itinerary with stay data (RLS handles org access)
   const { data: itinerary, error: itineraryError } = await supabase
     .from("itineraries")
     .select(
@@ -379,7 +384,6 @@ export async function getItineraryById(
     `
     )
     .eq("id", itineraryId)
-    .eq("user_id", user.id)
     .single();
 
   if (itineraryError || !itinerary) {

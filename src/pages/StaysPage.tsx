@@ -14,6 +14,7 @@ import { Search, Loader2, Calendar } from "lucide-react";
 import { CreateStayDialog } from "@/components/CreateStayDialog";
 import { EditStayDialog } from "@/components/EditStayDialog";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Select,
   SelectContent,
@@ -24,6 +25,7 @@ import {
 import { parseLocalDate } from "@/lib/utils";
 
 export function StaysPage() {
+  const { currentOrganization } = useAuth();
   const [stays, setStays] = useState<Stay[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -31,12 +33,16 @@ export function StaysPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadStays();
-  }, [search, statusFilter]);
+    if (currentOrganization) {
+      loadStays();
+    }
+  }, [search, statusFilter, currentOrganization]);
 
   const loadStays = async () => {
+    if (!currentOrganization) return;
+    
     setLoading(true);
-    const { data } = await getStays();
+    const { data } = await getStays(currentOrganization.id);
     if (data) {
       let filtered = data;
       
@@ -186,4 +192,3 @@ export function StaysPage() {
     </Layout>
   );
 }
-

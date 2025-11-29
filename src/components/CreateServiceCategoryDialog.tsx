@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createServiceCategory } from "@/lib/serviceCategoryService";
 import { Plus, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CreateServiceCategoryDialogProps {
   onCategoryCreated: () => void;
@@ -21,6 +22,7 @@ interface CreateServiceCategoryDialogProps {
 export function CreateServiceCategoryDialog({
   onCategoryCreated,
 }: CreateServiceCategoryDialogProps) {
+  const { currentOrganization } = useAuth();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
@@ -29,10 +31,10 @@ export function CreateServiceCategoryDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name) return;
+    if (!name || !currentOrganization) return;
 
     setLoading(true);
-    const { error } = await createServiceCategory({ name, description, icon });
+    const { error } = await createServiceCategory(currentOrganization.id, { name, description, icon });
     setLoading(false);
 
     if (!error) {
@@ -96,7 +98,7 @@ export function CreateServiceCategoryDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || !currentOrganization}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create
             </Button>
@@ -106,4 +108,3 @@ export function CreateServiceCategoryDialog({
     </Dialog>
   );
 }
-

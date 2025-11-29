@@ -135,7 +135,10 @@ export async function searchServices(
 }
 
 export async function createService(
-  service: Omit<Service, "id" | "created_at" | "updated_at" | "service_providers">
+  service: Omit<
+    Service,
+    "id" | "created_at" | "updated_at" | "service_providers"
+  >
 ): Promise<{ data: Service | null; error: any }> {
   const { data, error } = await supabase
     .from("services")
@@ -205,4 +208,3 @@ export function formatDuration(minutes?: number): string {
   if (remainingMinutes === 0) return `${hours}h`;
   return `${hours}h ${remainingMinutes}min`;
 }
-

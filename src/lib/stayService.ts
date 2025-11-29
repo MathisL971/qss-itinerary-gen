@@ -2,11 +2,12 @@ import { supabase } from "./supabase";
 
 export interface Stay {
   id: string;
+  organization_id: string;
   client_id: string;
   accommodation_id: string;
   arrival_date: string;
   departure_date: string;
-  status: 'pending' | 'confirmed' | 'checked-in' | 'checked-out' | 'cancelled';
+  status: "pending" | "confirmed" | "checked-in" | "checked-out" | "cancelled";
   notes: string;
   created_at: string;
   updated_at: string;
@@ -14,14 +15,17 @@ export interface Stay {
   accommodation?: { name: string };
 }
 
-export async function getStays() {
+export async function getStays(organizationId: string) {
   const { data, error } = await supabase
     .from("stays")
-    .select(`
+    .select(
+      `
       *,
       client:clients(name, email, language),
       accommodation:accommodations(name)
-    `)
+    `
+    )
+    .eq("organization_id", organizationId)
     .order("arrival_date", { ascending: true });
 
   return { data, error };
@@ -30,28 +34,36 @@ export async function getStays() {
 export async function getStayById(id: string) {
   const { data, error } = await supabase
     .from("stays")
-    .select(`
+    .select(
+      `
       *,
       client:clients(name, email, language),
       accommodation:accommodations(name)
-    `)
+    `
+    )
     .eq("id", id)
     .single();
 
   return { data, error };
 }
 
-export async function createStay(stay: Omit<Stay, "id" | "created_at" | "updated_at" | "client" | "accommodation">) {
+export async function createStay(
+  organizationId: string,
+  stay: Omit<Stay, "id" | "organization_id" | "created_at" | "updated_at" | "client" | "accommodation">
+) {
   const { data, error } = await supabase
     .from("stays")
-    .insert(stay)
+    .insert({ ...stay, organization_id: organizationId })
     .select()
     .single();
 
   return { data, error };
 }
 
-export async function updateStay(id: string, stay: Partial<Stay>) {
+export async function updateStay(
+  id: string,
+  stay: Partial<Omit<Stay, "id" | "organization_id" | "created_at" | "updated_at" | "client" | "accommodation">>
+) {
   const { data, error } = await supabase
     .from("stays")
     .update(stay)
@@ -63,11 +75,7 @@ export async function updateStay(id: string, stay: Partial<Stay>) {
 }
 
 export async function deleteStay(id: string) {
-  const { error } = await supabase
-    .from("stays")
-    .delete()
-    .eq("id", id);
+  const { error } = await supabase.from("stays").delete().eq("id", id);
 
   return { error };
 }
-

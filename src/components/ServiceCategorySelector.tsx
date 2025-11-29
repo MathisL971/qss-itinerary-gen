@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { getServiceCategories } from "@/lib/serviceCategoryService";
 import type { ServiceCategory } from "@/lib/serviceCategoryService";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ServiceCategorySelectorProps {
   value?: string;
@@ -20,23 +21,26 @@ export function ServiceCategorySelector({
   onSelect,
   className,
 }: ServiceCategorySelectorProps) {
+  const { currentOrganization } = useAuth();
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadCategories = async () => {
-      const { data } = await getServiceCategories();
+      if (!currentOrganization) return;
+      
+      const { data } = await getServiceCategories(currentOrganization.id);
       if (data) {
         setCategories(data);
       }
       setLoading(false);
     };
     loadCategories();
-  }, []);
+  }, [currentOrganization]);
 
   return (
     <div className={className}>
-      <Select value={value} onValueChange={onSelect} disabled={loading}>
+      <Select value={value} onValueChange={onSelect} disabled={loading || !currentOrganization}>
         <SelectTrigger>
           <SelectValue placeholder="Select category" />
         </SelectTrigger>

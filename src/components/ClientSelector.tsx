@@ -4,6 +4,7 @@ import { Label } from "./ui/label";
 import { searchClients } from "@/lib/clientService";
 import type { Client } from "@/lib/clientService";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ClientSelectorProps {
   value?: string; // client ID
@@ -19,6 +20,7 @@ export function ClientSelector({
   className,
   readOnly = false,
 }: ClientSelectorProps) {
+  const { currentOrganization } = useAuth();
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(initialName);
   const [clients, setClients] = useState<Client[]>([]);
@@ -29,10 +31,10 @@ export function ClientSelector({
   }, [initialName]);
 
   useEffect(() => {
-    if (readOnly) return;
+    if (readOnly || !currentOrganization) return;
     const delayDebounceFn = setTimeout(() => {
       if (searchTerm) {
-        searchClients(searchTerm).then(({ data }) => {
+        searchClients(currentOrganization.id, searchTerm).then(({ data }) => {
           if (data) setClients(data);
         });
       } else {
@@ -41,7 +43,7 @@ export function ClientSelector({
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, readOnly]);
+  }, [searchTerm, readOnly, currentOrganization]);
 
   const handleSelect = (client: Client) => {
     if (readOnly) return;

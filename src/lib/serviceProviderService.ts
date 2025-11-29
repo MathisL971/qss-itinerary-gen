@@ -2,6 +2,7 @@ import { supabase } from "./supabase";
 
 export interface ServiceProvider {
   id: string;
+  organization_id: string;
   name: string;
   category_id?: string;
   description?: string;
@@ -18,7 +19,10 @@ export interface ServiceProvider {
   };
 }
 
-export async function getServiceProviders(categoryId?: string): Promise<{
+export async function getServiceProviders(
+  organizationId: string,
+  categoryId?: string
+): Promise<{
   data: ServiceProvider[] | null;
   error: any;
 }> {
@@ -32,6 +36,7 @@ export async function getServiceProviders(categoryId?: string): Promise<{
       )
     `
     )
+    .eq("organization_id", organizationId)
     .order("name");
 
   if (categoryId) {
@@ -44,6 +49,7 @@ export async function getServiceProviders(categoryId?: string): Promise<{
 }
 
 export async function searchServiceProviders(
+  organizationId: string,
   query: string
 ): Promise<{ data: ServiceProvider[] | null; error: any }> {
   const { data, error } = await supabase
@@ -56,6 +62,7 @@ export async function searchServiceProviders(
       )
     `
     )
+    .eq("organization_id", organizationId)
     .ilike("name", `%${query}%`)
     .order("name")
     .limit(20);
@@ -64,14 +71,15 @@ export async function searchServiceProviders(
 }
 
 export async function createServiceProvider(
+  organizationId: string,
   provider: Omit<
     ServiceProvider,
-    "id" | "created_at" | "updated_at" | "service_categories"
+    "id" | "organization_id" | "created_at" | "updated_at" | "service_categories"
   >
 ): Promise<{ data: ServiceProvider | null; error: any }> {
   const { data, error } = await supabase
     .from("service_providers")
-    .insert(provider)
+    .insert({ ...provider, organization_id: organizationId })
     .select()
     .single();
 
@@ -80,7 +88,7 @@ export async function createServiceProvider(
 
 export async function updateServiceProvider(
   id: string,
-  updates: Partial<ServiceProvider>
+  updates: Partial<Omit<ServiceProvider, "id" | "organization_id" | "created_at" | "updated_at">>
 ): Promise<{ data: ServiceProvider | null; error: any }> {
   // Remove service_categories from updates if present as it's a joined field
   const { service_categories, ...cleanUpdates } = updates as any;
@@ -95,9 +103,7 @@ export async function updateServiceProvider(
   return { data, error };
 }
 
-export async function deleteServiceProvider(
-  id: string
-): Promise<{ error: any }> {
+export async function deleteServiceProvider(id: string): Promise<{ error: any }> {
   const { error } = await supabase
     .from("service_providers")
     .delete()

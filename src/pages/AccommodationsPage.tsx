@@ -11,26 +11,32 @@ import {
 } from "@/components/ui/table";
 import { getAccommodations, searchAccommodations, type Accommodation } from "@/lib/accommodationService";
 import { Search, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 import { CreateAccommodationDialog } from "@/components/CreateAccommodationDialog";
 import { EditAccommodationDialog } from "@/components/EditAccommodationDialog";
 
 export function AccommodationsPage() {
+  const { currentOrganization } = useAuth();
   const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    loadAccommodations();
-  }, [search]);
+    if (currentOrganization) {
+      loadAccommodations();
+    }
+  }, [search, currentOrganization]);
 
   const loadAccommodations = async () => {
+    if (!currentOrganization) return;
+    
     setLoading(true);
     if (search) {
-      const { data } = await searchAccommodations(search);
+      const { data } = await searchAccommodations(currentOrganization.id, search);
       if (data) setAccommodations(data);
     } else {
-      const { data } = await getAccommodations();
+      const { data } = await getAccommodations(currentOrganization.id);
       if (data) setAccommodations(data);
     }
     setLoading(false);
@@ -98,4 +104,3 @@ export function AccommodationsPage() {
     </Layout>
   );
 }
-

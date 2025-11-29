@@ -3,6 +3,7 @@ import { Input } from "./ui/input";
 import { searchServiceProviders } from "@/lib/serviceProviderService";
 import type { ServiceProvider } from "@/lib/serviceProviderService";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ServiceProviderSelectorProps {
   value?: string; // provider ID
@@ -20,6 +21,7 @@ export function ServiceProviderSelector({
   readOnly = false,
   placeholder = "Search provider..."
 }: ServiceProviderSelectorProps) {
+  const { currentOrganization } = useAuth();
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(initialName);
   const [providers, setProviders] = useState<ServiceProvider[]>([]);
@@ -31,10 +33,10 @@ export function ServiceProviderSelector({
   }, [initialName]);
 
   useEffect(() => {
-    if (readOnly) return;
+    if (readOnly || !currentOrganization) return;
     const delayDebounceFn = setTimeout(() => {
       if (searchTerm) {
-        searchServiceProviders(searchTerm).then(({ data }) => {
+        searchServiceProviders(currentOrganization.id, searchTerm).then(({ data }) => {
           if (data) setProviders(data);
         });
       } else {
@@ -43,7 +45,7 @@ export function ServiceProviderSelector({
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, readOnly]);
+  }, [searchTerm, readOnly, currentOrganization]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -114,4 +116,3 @@ export function ServiceProviderSelector({
     </div>
   );
 }
-

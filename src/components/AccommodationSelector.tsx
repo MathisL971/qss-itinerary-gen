@@ -5,6 +5,7 @@ import { searchAccommodations } from "@/lib/accommodationService";
 import type { Accommodation } from "@/lib/accommodationService";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { getTranslations, type Language } from "@/lib/i18n";
 
 interface AccommodationSelectorProps {
   value?: string; // accommodation ID
@@ -12,6 +13,7 @@ interface AccommodationSelectorProps {
   initialName?: string;
   className?: string;
   readOnly?: boolean;
+  language?: Language;
 }
 
 export function AccommodationSelector({
@@ -19,7 +21,9 @@ export function AccommodationSelector({
   initialName = "",
   className,
   readOnly = false,
+  language = "en",
 }: AccommodationSelectorProps) {
+  const t = getTranslations(language);
   const { currentOrganization } = useAuth();
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(initialName);
@@ -63,7 +67,7 @@ export function AccommodationSelector({
   if (readOnly) {
     return (
       <div className={cn("relative", className)}>
-        <Label htmlFor="accommodation-search">Accommodation Name</Label>
+        <Label htmlFor="accommodation-search">{t.labels.accommodationName}</Label>
         <div className="py-2 font-medium text-foreground">
           {initialName || "-"}
         </div>

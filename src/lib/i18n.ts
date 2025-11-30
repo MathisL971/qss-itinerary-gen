@@ -23,6 +23,17 @@ export interface Translations {
     feeDetailsAndSpecificPolicies: string;
     forGypsea: string;
     nailsByRomane: string;
+    // Itinerary Editor labels
+    itineraryBreakdown: string;
+    day: string;
+    noItemsAddedYet: string;
+    accommodation: string;
+    termsAndPolicies: string;
+    basicInformation: string;
+    arrivalDate: string;
+    departureDate: string;
+    clientName: string;
+    accommodationName: string;
   };
   
   // PDF Policy Text
@@ -68,6 +79,16 @@ const translations: Record<Language, Translations> = {
       feeDetailsAndSpecificPolicies: 'Fee Details and Specific Policies:',
       forGypsea: 'For GYPSEA:',
       nailsByRomane: 'NAILS by Romane:',
+      itineraryBreakdown: 'Itinerary Breakdown',
+      day: 'Day',
+      noItemsAddedYet: 'No items added yet',
+      accommodation: 'Accommodation',
+      termsAndPolicies: 'Terms & Policies',
+      basicInformation: 'Basic Information',
+      arrivalDate: 'Arrival Date',
+      departureDate: 'Departure Date',
+      clientName: 'Client Name',
+      accommodationName: 'Accommodation Name',
     },
     policies: {
       generalPolicy: 'All reservations must be canceled at least 24 to 48 hours in advance to avoid penalty fees. Some establishments also offer a courtesy delay of 15 to 30 minutes. Beyond this grace period, tables may be reassigned, and cancellation fees will apply.',
@@ -107,6 +128,16 @@ const translations: Record<Language, Translations> = {
       feeDetailsAndSpecificPolicies: 'Détails des frais et politiques spécifiques :',
       forGypsea: 'Pour GYPSEA :',
       nailsByRomane: 'NAILS par Romane :',
+      itineraryBreakdown: 'Détail de l\'Itinéraire',
+      day: 'Jour',
+      noItemsAddedYet: 'Aucun élément ajouté',
+      accommodation: 'Hébergement',
+      termsAndPolicies: 'Conditions & Politiques',
+      basicInformation: 'Informations de Base',
+      arrivalDate: 'Date d\'Arrivée',
+      departureDate: 'Date de Départ',
+      clientName: 'Nom du Client',
+      accommodationName: 'Nom de l\'Hébergement',
     },
     policies: {
       generalPolicy: 'Toutes les réservations doivent être annulées au moins 24 à 48 heures à l\'avance pour éviter les frais de pénalité. Certains établissements offrent également un délai de courtoisie de 15 à 30 minutes. Au-delà de cette période de grâce, les tables peuvent être réassignées et des frais d\'annulation s\'appliqueront.',

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
+import { enUS, fr } from "date-fns/locale";
 import {
   CalendarIcon,
   Plus,
@@ -30,6 +31,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type { DayItem, DayData } from "@/lib/itineraryService";
+import { getTranslations, type Language } from "@/lib/i18n";
 
 import { ClientSelector } from "@/components/ClientSelector";
 import { AccommodationSelector } from "@/components/AccommodationSelector";
@@ -58,6 +60,7 @@ interface ItineraryEditorProps {
   showHeader?: boolean;
   datesLocked?: boolean; // When true, dates are read-only (e.g., when linked to a stay)
   hideBasicInfo?: boolean; // When true, hide the Basic Information section
+  language?: Language; // Language for translations (used in read-only mode for shared page)
   onDataChange?: (data: ItineraryEditorData) => void;
 }
 
@@ -73,8 +76,34 @@ export function ItineraryEditor({
   showHeader = true,
   datesLocked = false,
   hideBasicInfo = false,
+  language = "en",
   onDataChange,
 }: ItineraryEditorProps) {
+  const t = getTranslations(language);
+  const dateLocale = language === "fr" ? fr : enUS;
+
+  // Helper function to format time based on language
+  // English: "14:30" -> "2:30pm"
+  // French: "14:30" -> "14h30"
+  const formatTime = (time: string): string => {
+    if (!time) return "";
+    const match = time.match(/(\d{1,2}):(\d{2})/);
+    if (!match) return time;
+
+    const hours = parseInt(match[1], 10);
+    const minutes = match[2];
+
+    if (language === "fr") {
+      // French format: 14h30
+      return `${hours}h${minutes}`;
+    } else {
+      // English format: 2:30pm
+      const ampm = hours >= 12 ? "pm" : "am";
+      let displayHours = hours % 12;
+      displayHours = displayHours ? displayHours : 12; // 0 should be 12
+      return `${displayHours}:${minutes}${ampm}`;
+    }
+  };
   const [clientName, setClientName] = useState(initialClientName);
   const [villaName, setVillaName] = useState(initialVillaName);
   const [clientId, setClientId] = useState(initialClientId);
@@ -509,7 +538,7 @@ export function ItineraryEditor({
             <div className="space-y-8 border border-border/60 rounded-xl p-8 md:p-10 bg-card shadow-sm hover:shadow-md transition-shadow duration-300">
               <div className="mb-8 border-b border-border/40 pb-6">
                 <h2 className="text-2xl md:text-3xl font-bold tracking-wide uppercase text-foreground">
-                  Basic Information
+                  {readOnly ? t.labels.basicInformation : "Basic Information"}
                 </h2>
                 {!readOnly && (
                   <p className="text-muted-foreground mt-2 font-light">
@@ -523,6 +552,7 @@ export function ItineraryEditor({
                     value={clientId}
                     initialName={clientName}
                     readOnly={readOnly}
+                    language={language}
                     onSelect={(client, name) => {
                       setClientName(name);
                       setClientId(client?.id);
@@ -534,6 +564,7 @@ export function ItineraryEditor({
                     value={accommodationId}
                     initialName={villaName}
                     readOnly={readOnly}
+                    language={language}
                     onSelect={(acc, name) => {
                       setVillaName(name);
                       setAccommodationId(acc?.id);
@@ -542,11 +573,11 @@ export function ItineraryEditor({
                 </div>
                 <div className="space-y-3">
                   <Label className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
-                    Arrival Date
+                    {readOnly ? t.labels.arrivalDate : "Arrival Date"}
                   </Label>
                   {readOnly ? (
                     <div className="py-2 font-medium text-foreground">
-                      {arrivalDate ? format(arrivalDate, "PPP") : "-"}
+                      {arrivalDate ? format(arrivalDate, "PPP", { locale: dateLocale }) : "-"}
                     </div>
                   ) : (
                     <Popover
@@ -593,11 +624,11 @@ export function ItineraryEditor({
                 </div>
                 <div className="space-y-3">
                   <Label className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
-                    Departure Date
+                    {readOnly ? t.labels.departureDate : "Departure Date"}
                   </Label>
                   {readOnly ? (
                     <div className="py-2 font-medium text-foreground">
-                      {departureDate ? format(departureDate, "PPP") : "-"}
+                      {departureDate ? format(departureDate, "PPP", { locale: dateLocale }) : "-"}
                     </div>
                   ) : (
                     <Popover
@@ -651,7 +682,7 @@ export function ItineraryEditor({
             <div className="space-y-16 animate-fade-in">
               <div className="text-center py-8 m-0">
                 <h2 className="text-3xl md:text-4xl font-bold tracking-widest uppercase border-b-2 border-foreground/5 inline-block pb-4">
-                  Itinerary Breakdown
+                  {t.labels.itineraryBreakdown}
                 </h2>
               </div>
               <div className="space-y-12">
@@ -663,10 +694,10 @@ export function ItineraryEditor({
                       </span>
                       <div>
                         <h3 className="text-2xl md:text-3xl font-bold tracking-wide uppercase mb-1">
-                          Day {dayIndex + 1}
+                          {t.labels.day} {dayIndex + 1}
                         </h3>
                         <p className="text-sm text-muted-foreground tracking-widest uppercase">
-                          {format(day.date, "EEEE, MMMM d, yyyy")}
+                          {format(day.date, "EEEE, MMMM d, yyyy", { locale: dateLocale })}
                         </p>
                       </div>
                     </div>
@@ -681,19 +712,19 @@ export function ItineraryEditor({
                               "font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4",
                               readOnly ? "w-[120px]" : "w-[140px]"
                             )}>
-                              Time
+                              {t.labels.time}
                             </TableHead>
                             <TableHead className={cn(
                               "font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4",
                               readOnly && "w-[50%]"
                             )}>
-                              Event
+                              {t.labels.event}
                             </TableHead>
                             <TableHead className={cn(
                               "font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4",
                               readOnly && "w-[35%]"
                             )}>
-                              Location
+                              {t.labels.location}
                             </TableHead>
                             {!readOnly && (
                               <TableHead className="w-[200px] font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4">
@@ -719,7 +750,7 @@ export function ItineraryEditor({
                                     <Plus className="h-5 w-5" />
                                   </div>
                                   <p className="text-lg tracking-wide uppercase">
-                                    No items added yet
+                                    {t.labels.noItemsAddedYet}
                                   </p>
                                 </div>
                               </TableCell>
@@ -863,7 +894,7 @@ export function ItineraryEditor({
                                   <TableCell className={cn("px-4", readOnly ? "align-top" : "align-middle")}>
                                     {readOnly ? (
                                       <div className="py-2 font-medium">
-                                        {item.time || "-"}
+                                        {item.time ? formatTime(item.time) : "-"}
                                       </div>
                                     ) : (
                                       <TimePicker
@@ -922,7 +953,7 @@ export function ItineraryEditor({
                                         {item.is_accommodation_location ? (
                                           <span className="flex items-center gap-1.5">
                                             <Home className="h-3.5 w-3.5" />
-                                            {villaName || "Accommodation"}
+                                            {villaName || t.labels.accommodation}
                                           </span>
                                         ) : (
                                           item.location || "-"

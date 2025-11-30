@@ -140,6 +140,7 @@ export function SharedItineraryPage() {
         initialDayData={dayData}
         readOnly={true}
         showHeader={true}
+        language={language}
       />
 
       {/* Service Provider Policies Section */}
@@ -148,9 +149,7 @@ export function SharedItineraryPage() {
           <div className="border border-border/60 rounded-xl p-8 md:p-10 bg-card shadow-sm">
             <div className="mb-6 border-b border-border/40 pb-4">
               <h2 className="text-2xl md:text-3xl font-bold tracking-wide uppercase text-foreground">
-                {language === "fr"
-                  ? "Conditions & Politiques"
-                  : "Terms & Policies"}
+                {t.labels.termsAndPolicies}
               </h2>
             </div>
             <div className="space-y-6">

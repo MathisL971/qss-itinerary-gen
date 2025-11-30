@@ -1,27 +1,42 @@
 import jsPDF from "jspdf";
 import { format } from "date-fns";
+import { enUS, fr } from "date-fns/locale";
 import type { DayData } from "./itineraryService";
 import { extractPolicies } from "./itineraryService";
-import { getTranslations, getClientLanguage } from "./i18n";
+import { getTranslations, getClientLanguage, type Language } from "./i18n";
 import { logger } from "./logger";
 
-// Helper function to format time (e.g., "14:30" -> "2:30pm")
-function formatTimeForPDF(time: string): string {
+// Helper function to format time based on language
+// English: "14:30" -> "2:30pm"
+// French: "14:30" -> "14h30"
+function formatTimeForPDF(time: string, language: Language): string {
   if (!time) return "";
   const match = time.match(/(\d{1,2}):(\d{2})/);
   if (!match) return time;
 
-  let hours = parseInt(match[1], 10);
+  const hours = parseInt(match[1], 10);
   const minutes = match[2];
-  const ampm = hours >= 12 ? "pm" : "am";
-  hours = hours % 12;
-  hours = hours ? hours : 12; // 0 should be 12
 
-  return `${hours}:${minutes}${ampm}`;
+  if (language === "fr") {
+    // French format: 14h30
+    return `${hours}h${minutes}`;
+  } else {
+    // English format: 2:30pm
+    const ampm = hours >= 12 ? "pm" : "am";
+    let displayHours = hours % 12;
+    displayHours = displayHours ? displayHours : 12; // 0 should be 12
+    return `${displayHours}:${minutes}${ampm}`;
+  }
 }
 
-// Helper function to get ordinal suffix
-function getOrdinalSuffix(day: number): string {
+// Helper function to get ordinal suffix based on language
+function getOrdinalSuffix(day: number, language: Language): string {
+  if (language === "fr") {
+    // French: only 1er (premier), others have no suffix
+    return day === 1 ? "er" : "";
+  }
+  
+  // English ordinals
   if (day > 3 && day < 21) return "th";
   switch (day % 10) {
     case 1:
@@ -60,6 +75,7 @@ export async function generatePDF(
   // Get translations based on client language
   const language = getClientLanguage(clientLanguage);
   const t = getTranslations(language);
+  const dateLocale = language === "fr" ? fr : enUS;
 
   // Load logo image and convert to base64, get dimensions
   let logoDataUrl = "";
@@ -251,12 +267,12 @@ export async function generatePDF(
   doc.text(clientName || "XXX", margin, yPosition);
   doc.text(villaName || "XXX", margin + labelSpacing, yPosition);
   doc.text(
-    arrivalDate ? format(arrivalDate, "MMM d, yyyy").toUpperCase() : "XXX",
+    arrivalDate ? format(arrivalDate, "d MMM yyyy", { locale: dateLocale }).toUpperCase() : "XXX",
     margin + labelSpacing * 2,
     yPosition
   );
   doc.text(
-    departureDate ? format(departureDate, "MMM d, yyyy").toUpperCase() : "XXX",
+    departureDate ? format(departureDate, "d MMM yyyy", { locale: dateLocale }).toUpperCase() : "XXX",
     margin + labelSpacing * 3,
     yPosition
   );
@@ -276,10 +292,10 @@ export async function generatePDF(
   dayData.forEach((day) => {
     checkPageBreak(40);
 
-    // Day and date header (e.g., "WEDNESDAY 18th")
-    const dayName = format(day.date, "EEEE").toUpperCase();
+    // Day and date header (e.g., "WEDNESDAY 18th" or "MERCREDI 18")
+    const dayName = format(day.date, "EEEE", { locale: dateLocale }).toUpperCase();
     const dayNumber = day.date.getDate();
-    const ordinal = getOrdinalSuffix(dayNumber);
+    const ordinal = getOrdinalSuffix(dayNumber, language);
     const dayTitle = `${dayName} ${dayNumber}${ordinal}`;
 
     doc.setFontSize(fontSize);
@@ -326,8 +342,8 @@ export async function generatePDF(
         doc.setFontSize(fontSize);
         doc.setTextColor(grayR, grayG, grayB);
 
-        // Format time
-        const timeText = item.time ? formatTimeForPDF(item.time) : "-";
+        // Format time based on language
+        const timeText = item.time ? formatTimeForPDF(item.time, language) : "-";
         const timeMaxWidth = eventColX - timeColX - 5;
         const timeLines = doc.splitTextToSize(timeText, timeMaxWidth);
         doc.text(timeLines, timeColX, yPosition);
@@ -342,7 +358,7 @@ export async function generatePDF(
 
         // Location (may need to wrap) - use accommodation name if is_accommodation_location is true
         const locationText = item.is_accommodation_location
-          ? accommodationName || villaName || "Accommodation"
+          ? accommodationName || villaName || t.labels.accommodation
           : item.location || "-";
         const locationMaxWidth = tableRight - locationColX - 5;
         const locationLines = doc.splitTextToSize(

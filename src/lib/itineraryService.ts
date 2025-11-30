@@ -346,7 +346,7 @@ export async function getUserItineraries(organizationId: string): Promise<{
         accommodation_id,
         arrival_date,
         departure_date,
-        client:clients(name, email),
+        client:clients(name, email, language),
         accommodation:accommodations(name)
       )
     `
@@ -444,7 +444,7 @@ export async function getSharedItinerary(
         accommodation_id,
         arrival_date,
         departure_date,
-        client:clients(name, email),
+        client:clients(name, email, language),
         accommodation:accommodations(name)
       )
     `

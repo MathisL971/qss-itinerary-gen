@@ -5,6 +5,7 @@ import { searchClients } from "@/lib/clientService";
 import type { Client } from "@/lib/clientService";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { getTranslations, type Language } from "@/lib/i18n";
 
 interface ClientSelectorProps {
   value?: string; // client ID
@@ -12,6 +13,7 @@ interface ClientSelectorProps {
   initialName?: string;
   className?: string;
   readOnly?: boolean;
+  language?: Language;
 }
 
 export function ClientSelector({
@@ -19,7 +21,9 @@ export function ClientSelector({
   initialName = "",
   className,
   readOnly = false,
+  language = "en",
 }: ClientSelectorProps) {
+  const t = getTranslations(language);
   const { currentOrganization } = useAuth();
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(initialName);
@@ -63,7 +67,7 @@ export function ClientSelector({
   if (readOnly) {
     return (
       <div className={cn("relative", className)}>
-        <Label htmlFor="client-search">Client Name</Label>
+        <Label htmlFor="client-search">{t.labels.clientName}</Label>
         <div className="py-2 font-medium text-foreground">
           {initialName || "-"}
         </div>

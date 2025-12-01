@@ -9,8 +9,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getClients, searchClients, type Client } from "@/lib/clientService";
-import { Search, Loader2 } from "lucide-react";
+import { getClients, searchClients, deleteClient, type Client } from "@/lib/clientService";
+import { Search, Loader2, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
 import { CreateClientDialog } from "@/components/CreateClientDialog";
@@ -40,6 +41,13 @@ export function ClientsPage() {
       if (data) setClients(data);
     }
     setLoading(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to delete this client?")) {
+      await deleteClient(id);
+      loadClients();
+    }
   };
 
   return (
@@ -91,7 +99,18 @@ export function ClientsPage() {
                       <TableCell>{client.email || "-"}</TableCell>
                       <TableCell>{client.phone || "-"}</TableCell>
                       <TableCell className="text-right">
-                        <EditClientDialog client={client} onClientUpdated={loadClients} />
+                        <div className="flex justify-end gap-2">
+                          <EditClientDialog client={client} onClientUpdated={loadClients} />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-500 hover:text-red-600 gap-2"
+                            onClick={() => handleDelete(client.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))

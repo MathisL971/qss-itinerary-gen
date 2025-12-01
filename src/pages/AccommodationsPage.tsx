@@ -9,8 +9,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getAccommodations, searchAccommodations, type Accommodation } from "@/lib/accommodationService";
-import { Search, Loader2 } from "lucide-react";
+import { getAccommodations, searchAccommodations, deleteAccommodation, type Accommodation } from "@/lib/accommodationService";
+import { Search, Loader2, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
 import { CreateAccommodationDialog } from "@/components/CreateAccommodationDialog";
@@ -40,6 +41,13 @@ export function AccommodationsPage() {
       if (data) setAccommodations(data);
     }
     setLoading(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to delete this accommodation?")) {
+      await deleteAccommodation(id);
+      loadAccommodations();
+    }
   };
 
   return (
@@ -91,7 +99,18 @@ export function AccommodationsPage() {
                       <TableCell className="capitalize">{acc.type}</TableCell>
                       <TableCell>{acc.capacity || "-"}</TableCell>
                       <TableCell className="text-right">
-                        <EditAccommodationDialog accommodation={acc} onAccommodationUpdated={loadAccommodations} />
+                        <div className="flex justify-end gap-2">
+                          <EditAccommodationDialog accommodation={acc} onAccommodationUpdated={loadAccommodations} />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-500 hover:text-red-600 gap-2"
+                            onClick={() => handleDelete(acc.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))

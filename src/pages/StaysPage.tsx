@@ -9,8 +9,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getStays, type Stay } from "@/lib/stayService";
-import { Search, Loader2, Calendar } from "lucide-react";
+import { getStays, deleteStay, type Stay } from "@/lib/stayService";
+import { Search, Loader2, Calendar, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { CreateStayDialog } from "@/components/CreateStayDialog";
 import { EditStayDialog } from "@/components/EditStayDialog";
 import { useNavigate } from "react-router-dom";
@@ -88,6 +89,13 @@ export function StaysPage() {
         return "bg-red-100 text-red-800";
       default:
         return "bg-yellow-100 text-yellow-800";
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Are you sure you want to delete this stay?")) {
+      await deleteStay(id);
+      loadStays();
     }
   };
 
@@ -179,7 +187,18 @@ export function StaysPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                        <EditStayDialog stay={stay} onStayUpdated={loadStays} />
+                        <div className="flex justify-end gap-2">
+                          <EditStayDialog stay={stay} onStayUpdated={loadStays} />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-500 hover:text-red-600 gap-2"
+                            onClick={() => handleDelete(stay.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))

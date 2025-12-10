@@ -83,15 +83,34 @@ export function ItineraryEditor({
   const dateLocale = language === "fr" ? fr : enUS;
 
   // Helper function to format time based on language
+  // Handles both 24-hour format (new: "14:30") and 12-hour format (legacy: "2:30 PM")
   // English: "14:30" -> "2:30pm"
   // French: "14:30" -> "14h30"
   const formatTime = (time: string): string => {
     if (!time) return "";
-    const match = time.match(/(\d{1,2}):(\d{2})/);
-    if (!match) return time;
 
-    const hours = parseInt(match[1], 10);
-    const minutes = match[2];
+    let hours: number;
+    let minutes: string;
+
+    // Check if it's 12-hour format (contains AM/PM) - legacy data
+    const pmMatch = time.match(/(\d{1,2}):(\d{2})\s*PM/i);
+    const amMatch = time.match(/(\d{1,2}):(\d{2})\s*AM/i);
+
+    if (pmMatch) {
+      const h = parseInt(pmMatch[1], 10);
+      hours = h === 12 ? 12 : h + 12;
+      minutes = pmMatch[2];
+    } else if (amMatch) {
+      const h = parseInt(amMatch[1], 10);
+      hours = h === 12 ? 0 : h;
+      minutes = amMatch[2];
+    } else {
+      // 24-hour format (new data)
+      const match = time.match(/(\d{1,2}):(\d{2})/);
+      if (!match) return time;
+      hours = parseInt(match[1], 10);
+      minutes = match[2];
+    }
 
     if (language === "fr") {
       // French format: 14h30
@@ -145,10 +164,7 @@ export function ItineraryEditor({
   });
 
   // Helper function to compare dates by value
-  const areDatesEqual = (
-    a: Date | undefined,
-    b: Date | undefined
-  ): boolean => {
+  const areDatesEqual = (a: Date | undefined, b: Date | undefined): boolean => {
     if (a === b) return true;
     if (!a || !b) return false;
     return a.getTime() === b.getTime();
@@ -181,7 +197,7 @@ export function ItineraryEditor({
   // Update state when props change (only if values actually changed)
   useEffect(() => {
     const prev = prevPropsRef.current;
-    
+
     // Check if any prop values actually changed
     const clientNameChanged = prev.initialClientName !== initialClientName;
     const villaNameChanged = prev.initialVillaName !== initialVillaName;
@@ -577,7 +593,9 @@ export function ItineraryEditor({
                   </Label>
                   {readOnly ? (
                     <div className="py-2 font-medium text-foreground">
-                      {arrivalDate ? format(arrivalDate, "PPP", { locale: dateLocale }) : "-"}
+                      {arrivalDate
+                        ? format(arrivalDate, "PPP", { locale: dateLocale })
+                        : "-"}
                     </div>
                   ) : (
                     <Popover
@@ -628,7 +646,9 @@ export function ItineraryEditor({
                   </Label>
                   {readOnly ? (
                     <div className="py-2 font-medium text-foreground">
-                      {departureDate ? format(departureDate, "PPP", { locale: dateLocale }) : "-"}
+                      {departureDate
+                        ? format(departureDate, "PPP", { locale: dateLocale })
+                        : "-"}
                     </div>
                   ) : (
                     <Popover
@@ -697,7 +717,9 @@ export function ItineraryEditor({
                           {t.labels.day} {dayIndex + 1}
                         </h3>
                         <p className="text-sm text-muted-foreground tracking-widest uppercase">
-                          {format(day.date, "EEEE, MMMM d, yyyy", { locale: dateLocale })}
+                          {format(day.date, "EEEE, MMMM d, yyyy", {
+                            locale: dateLocale,
+                          })}
                         </p>
                       </div>
                     </div>
@@ -708,22 +730,28 @@ export function ItineraryEditor({
                             {!readOnly && (
                               <TableHead className="w-[50px]"></TableHead>
                             )}
-                            <TableHead className={cn(
-                              "font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4",
-                              readOnly ? "w-[120px]" : "w-[140px]"
-                            )}>
+                            <TableHead
+                              className={cn(
+                                "font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4",
+                                readOnly ? "w-[120px]" : "w-[140px]"
+                              )}
+                            >
                               {t.labels.time}
                             </TableHead>
-                            <TableHead className={cn(
-                              "font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4",
-                              readOnly && "w-[50%]"
-                            )}>
+                            <TableHead
+                              className={cn(
+                                "font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4",
+                                readOnly && "w-[50%]"
+                              )}
+                            >
                               {t.labels.event}
                             </TableHead>
-                            <TableHead className={cn(
-                              "font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4",
-                              readOnly && "w-[35%]"
-                            )}>
+                            <TableHead
+                              className={cn(
+                                "font-bold text-[11px] tracking-widest uppercase text-muted-foreground py-4 px-4",
+                                readOnly && "w-[35%]"
+                              )}
+                            >
                               {t.labels.location}
                             </TableHead>
                             {!readOnly && (
@@ -891,10 +919,17 @@ export function ItineraryEditor({
                                       </div>
                                     </TableCell>
                                   )}
-                                  <TableCell className={cn("px-4", readOnly ? "align-top" : "align-middle")}>
+                                  <TableCell
+                                    className={cn(
+                                      "px-4",
+                                      readOnly ? "align-top" : "align-middle"
+                                    )}
+                                  >
                                     {readOnly ? (
                                       <div className="py-2 font-medium">
-                                        {item.time ? formatTime(item.time) : "-"}
+                                        {item.time
+                                          ? formatTime(item.time)
+                                          : "-"}
                                       </div>
                                     ) : (
                                       <TimePicker
@@ -911,17 +946,25 @@ export function ItineraryEditor({
                                       />
                                     )}
                                   </TableCell>
-                                  <TableCell className={cn("px-4", readOnly ? "align-top" : "align-middle")}>
+                                  <TableCell
+                                    className={cn(
+                                      "px-4",
+                                      readOnly ? "align-top" : "align-middle"
+                                    )}
+                                  >
                                     {readOnly ? (
                                       <div className="py-2">
                                         <div className="font-medium">
                                           {item.event || "-"}
                                         </div>
-                                        {(item.service || item.service_provider) && (
+                                        {(item.service ||
+                                          item.service_provider) && (
                                           <div className="text-xs text-muted-foreground mt-1">
                                             {item.service ? (
                                               <>
-                                                {item.service.service_providers?.name || item.service_provider?.name}
+                                                {item.service.service_providers
+                                                  ?.name ||
+                                                  item.service_provider?.name}
                                                 {" → "}
                                                 {item.service.name}
                                               </>
@@ -947,13 +990,19 @@ export function ItineraryEditor({
                                       />
                                     )}
                                   </TableCell>
-                                  <TableCell className={cn("px-4", readOnly ? "align-top" : "align-middle")}>
+                                  <TableCell
+                                    className={cn(
+                                      "px-4",
+                                      readOnly ? "align-top" : "align-middle"
+                                    )}
+                                  >
                                     {readOnly ? (
                                       <div className="py-2 text-muted-foreground">
                                         {item.is_accommodation_location ? (
                                           <span className="flex items-center gap-1.5">
                                             <Home className="h-3.5 w-3.5" />
-                                            {villaName || t.labels.accommodation}
+                                            {villaName ||
+                                              t.labels.accommodation}
                                           </span>
                                         ) : (
                                           item.location || "-"
@@ -963,14 +1012,28 @@ export function ItineraryEditor({
                                       <div className="flex items-center gap-2">
                                         <Button
                                           type="button"
-                                          variant={item.is_accommodation_location ? "secondary" : "ghost"}
+                                          variant={
+                                            item.is_accommodation_location
+                                              ? "secondary"
+                                              : "ghost"
+                                          }
                                           size="icon"
                                           className={cn(
                                             "h-10 w-10 shrink-0",
-                                            item.is_accommodation_location && "bg-primary/10 text-primary"
+                                            item.is_accommodation_location &&
+                                              "bg-primary/10 text-primary"
                                           )}
-                                          title={item.is_accommodation_location ? "Using accommodation" : "Use accommodation as location"}
-                                          onClick={() => toggleAccommodationLocation(dayIndex, item.id)}
+                                          title={
+                                            item.is_accommodation_location
+                                              ? "Using accommodation"
+                                              : "Use accommodation as location"
+                                          }
+                                          onClick={() =>
+                                            toggleAccommodationLocation(
+                                              dayIndex,
+                                              item.id
+                                            )
+                                          }
                                         >
                                           <Home className="h-4 w-4" />
                                         </Button>

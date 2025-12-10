@@ -7,15 +7,34 @@ import { getTranslations, getClientLanguage, type Language } from "./i18n";
 import { logger } from "./logger";
 
 // Helper function to format time based on language
+// Handles both 24-hour format (new: "14:30") and 12-hour format (legacy: "2:30 PM")
 // English: "14:30" -> "2:30pm"
 // French: "14:30" -> "14h30"
 function formatTimeForPDF(time: string, language: Language): string {
   if (!time) return "";
-  const match = time.match(/(\d{1,2}):(\d{2})/);
-  if (!match) return time;
 
-  const hours = parseInt(match[1], 10);
-  const minutes = match[2];
+  let hours: number;
+  let minutes: string;
+
+  // Check if it's 12-hour format (contains AM/PM) - legacy data
+  const pmMatch = time.match(/(\d{1,2}):(\d{2})\s*PM/i);
+  const amMatch = time.match(/(\d{1,2}):(\d{2})\s*AM/i);
+
+  if (pmMatch) {
+    const h = parseInt(pmMatch[1], 10);
+    hours = h === 12 ? 12 : h + 12;
+    minutes = pmMatch[2];
+  } else if (amMatch) {
+    const h = parseInt(amMatch[1], 10);
+    hours = h === 12 ? 0 : h;
+    minutes = amMatch[2];
+  } else {
+    // 24-hour format (new data)
+    const match = time.match(/(\d{1,2}):(\d{2})/);
+    if (!match) return time;
+    hours = parseInt(match[1], 10);
+    minutes = match[2];
+  }
 
   if (language === "fr") {
     // French format: 14h30

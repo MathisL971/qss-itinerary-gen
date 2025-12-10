@@ -26,7 +26,18 @@ export function TimePicker({
   const [timeValue, setTimeValue] = React.useState(value || "");
 
   React.useEffect(() => {
-    setTimeValue(value || "");
+    // Convert incoming value (which may be 24-hour format from DB) to 12-hour display format
+    if (value) {
+      // Check if it's already in 12-hour format (contains AM/PM)
+      if (/AM|PM/i.test(value)) {
+        setTimeValue(value);
+      } else {
+        // Convert 24-hour format to 12-hour for display
+        setTimeValue(formatTime(value));
+      }
+    } else {
+      setTimeValue("");
+    }
   }, [value]);
 
   const formatTime = (time: string): string => {
@@ -83,7 +94,9 @@ export function TimePicker({
       .padStart(2, "0")}`;
     const time12 = formatTime(time24);
     setTimeValue(time12);
-    onChange?.(time12);
+    // Send 24-hour format to parent/database for consistent storage
+    // Display format (time12) is only used for UI
+    onChange?.(time24);
     if (closeAfterSelect) {
       setOpen(false);
     }

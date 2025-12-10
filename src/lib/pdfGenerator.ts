@@ -35,7 +35,7 @@ function getOrdinalSuffix(day: number, language: Language): string {
     // French: only 1er (premier), others have no suffix
     return day === 1 ? "er" : "";
   }
-  
+
   // English ordinals
   if (day > 3 && day < 21) return "th";
   switch (day % 10) {
@@ -162,10 +162,6 @@ export async function generatePDF(
   const blackR = 0;
   const blackG = 0;
   const blackB = 0;
-  // Medium-light gray color for table row values (between gray and light gray)
-  const grayR = 160;
-  const grayG = 160;
-  const grayB = 160;
 
   // Font size
   const fontSize = 10;
@@ -263,16 +259,22 @@ export async function generatePDF(
   // Values
   yPosition = lineY + 4;
   doc.setFontSize(fontSize);
-  doc.setTextColor(grayR, grayG, grayB);
+  doc.setTextColor(blackR, blackG, blackB);
   doc.text(clientName || "XXX", margin, yPosition);
   doc.text(villaName || "XXX", margin + labelSpacing, yPosition);
   doc.text(
-    arrivalDate ? format(arrivalDate, "d MMM yyyy", { locale: dateLocale }).toUpperCase() : "XXX",
+    arrivalDate
+      ? format(arrivalDate, "d MMM yyyy", { locale: dateLocale }).toUpperCase()
+      : "XXX",
     margin + labelSpacing * 2,
     yPosition
   );
   doc.text(
-    departureDate ? format(departureDate, "d MMM yyyy", { locale: dateLocale }).toUpperCase() : "XXX",
+    departureDate
+      ? format(departureDate, "d MMM yyyy", {
+          locale: dateLocale,
+        }).toUpperCase()
+      : "XXX",
     margin + labelSpacing * 3,
     yPosition
   );
@@ -293,7 +295,9 @@ export async function generatePDF(
     checkPageBreak(40);
 
     // Day and date header (e.g., "WEDNESDAY 18th" or "MERCREDI 18")
-    const dayName = format(day.date, "EEEE", { locale: dateLocale }).toUpperCase();
+    const dayName = format(day.date, "EEEE", {
+      locale: dateLocale,
+    }).toUpperCase();
     const dayNumber = day.date.getDate();
     const ordinal = getOrdinalSuffix(dayNumber, language);
     const dayTitle = `${dayName} ${dayNumber}${ordinal}`;
@@ -343,7 +347,9 @@ export async function generatePDF(
         doc.setTextColor(blackR, blackG, blackB);
 
         // Format time based on language
-        const timeText = item.time ? formatTimeForPDF(item.time, language) : "-";
+        const timeText = item.time
+          ? formatTimeForPDF(item.time, language)
+          : "-";
         const timeMaxWidth = eventColX - timeColX - 5;
         const timeLines = doc.splitTextToSize(timeText, timeMaxWidth);
         doc.text(timeLines, timeColX, yPosition);
@@ -473,7 +479,7 @@ export async function generatePDF(
     // Show message when no policies are available
     doc.setFontSize(fontSize);
     doc.setFont(fontFamily, "italic");
-    doc.setTextColor(grayR, grayG, grayB);
+    doc.setTextColor(blackR, blackG, blackB);
     const noPolicesText =
       language === "fr"
         ? "Aucune politique de prestataire spécifique pour cet itinéraire."
@@ -483,27 +489,27 @@ export async function generatePDF(
   }
 
   // General cancellation note
-  yPosition += 5;
-  checkPageBreak(30);
-  doc.setFontSize(fontSize);
-  doc.setFont(fontFamily, "bold");
-  doc.setTextColor(blackR, blackG, blackB);
-  doc.text(
-    language === "fr" ? "NOTE IMPORTANTE" : "IMPORTANT NOTE",
-    margin,
-    yPosition
-  );
-  yPosition += 6;
+  // yPosition += 5;
+  // checkPageBreak(30);
+  // doc.setFontSize(fontSize);
+  // doc.setFont(fontFamily, "bold");
+  // doc.setTextColor(blackR, blackG, blackB);
+  // doc.text(
+  //   language === "fr" ? "NOTE IMPORTANTE" : "IMPORTANT NOTE",
+  //   margin,
+  //   yPosition
+  // );
+  // yPosition += 6;
 
-  doc.setFontSize(fontSize - 1);
-  doc.setFont(fontFamily, "normal");
-  doc.setTextColor(60, 60, 60);
-  const generalNote =
-    language === "fr"
-      ? "Veuillez noter que les politiques d'annulation et les conditions peuvent varier selon les prestataires. Nous vous recommandons de confirmer directement avec chaque établissement pour les détails spécifiques."
-      : "Please note that cancellation policies and conditions may vary by provider. We recommend confirming directly with each establishment for specific details.";
-  const noteLines = doc.splitTextToSize(generalNote, pageWidth - 2 * margin);
-  doc.text(noteLines, margin, yPosition);
+  // doc.setFontSize(fontSize - 1);
+  // doc.setFont(fontFamily, "normal");
+  // doc.setTextColor(60, 60, 60);
+  // const generalNote =
+  //   language === "fr"
+  //     ? "Veuillez noter que les politiques d'annulation et les conditions peuvent varier selon les prestataires. Nous vous recommandons de confirmer directement avec chaque établissement pour les détails spécifiques."
+  //     : "Please note that cancellation policies and conditions may vary by provider. We recommend confirming directly with each establishment for specific details.";
+  // const noteLines = doc.splitTextToSize(generalNote, pageWidth - 2 * margin);
+  // doc.text(noteLines, margin, yPosition);
 
   // Add page numbers to all pages
   // Get the current page count right before drawing to ensure accuracy

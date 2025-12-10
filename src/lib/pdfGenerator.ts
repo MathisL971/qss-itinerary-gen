@@ -340,7 +340,7 @@ export async function generatePDF(
 
         doc.setFont(fontFamily, "normal");
         doc.setFontSize(fontSize);
-        doc.setTextColor(grayR, grayG, grayB);
+        doc.setTextColor(blackR, blackG, blackB);
 
         // Format time based on language
         const timeText = item.time ? formatTimeForPDF(item.time, language) : "-";

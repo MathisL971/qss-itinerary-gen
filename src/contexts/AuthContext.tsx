@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 import { supabase, siteUrl } from "@/lib/supabase";
 import { getUserOrganizations } from "@/lib/organizationService";
 import type { OrganizationWithRole } from "@/lib/organizationService";
@@ -35,6 +42,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Track current user ID to detect spurious SIGNED_IN events (e.g., on tab switch)
+  const currentUserIdRef = useRef<string | null>(null);
 
   // Organization state
   const [organizations, setOrganizations] = useState<OrganizationWithRole[]>(
@@ -108,6 +118,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       setLoading(false);
 
+      // Track the current user ID
+      currentUserIdRef.current = session?.user?.id ?? null;
+
       // Fetch organizations if user is logged in
       if (session?.user) {
         fetchOrganizations();
@@ -119,20 +132,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      const newUserId = session?.user?.id ?? null;
+
+      // Skip events that don't represent a real auth state change
+      // TOKEN_REFRESHED: only the token changed, not the user
+      // SIGNED_IN with same user: spurious event (e.g., tab switch triggering re-detection)
+      if (event === "TOKEN_REFRESHED") {
+        return;
+      }
+
+      if (event === "SIGNED_IN" && newUserId === currentUserIdRef.current) {
+        // Same user already signed in - this is a spurious event, skip it
+        return;
+      }
+
+      // Update the tracked user ID
+      currentUserIdRef.current = newUserId;
+
+      // For real auth changes, update the session/user state
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
 
-      if (session?.user) {
+      if (event === "SIGNED_IN") {
         fetchOrganizations();
-      } else {
+      } else if (event === "SIGNED_OUT") {
         // Clear organization state on logout
         setOrganizations([]);
         setCurrentOrganization(null);
         setOrganizationsLoading(false);
         localStorage.removeItem(SELECTED_ORG_KEY);
       }
+      // For INITIAL_SESSION, etc., we don't need to refetch orgs (already fetched above)
     });
 
     return () => subscription.unsubscribe();

@@ -172,7 +172,7 @@ export async function generatePDF(
   }
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 20;
+  const margin = 10;
   const tableIndent = 1; // Indentation on both sides of day tables
   const contentWidth = pageWidth - 2 * margin;
   let yPosition = margin;
@@ -192,17 +192,17 @@ export async function generatePDF(
   let logoHeightPt = 0;
   if (logoDataUrl && logoWidth > 0 && logoHeight > 0) {
     // Target width: 17mm = 17 * 72 / 25.4 ≈ 48 points
-    const targetWidthMm = 17;
+    const targetWidthMm = 12;
     const targetWidthPt = (targetWidthMm * 72) / 25.4;
     const aspectRatio = logoHeight / logoWidth;
     logoWidthPt = targetWidthPt;
     logoHeightPt = targetWidthPt * aspectRatio;
   }
-  const headerHeight = logoHeightPt > 0 ? logoHeightPt + 8 : 18;
+  const headerHeight = logoHeightPt > 0 ? logoHeightPt : 18;
 
   // Function to draw header with logo on every page
   const drawHeader = () => {
-    const headerY = margin;
+    const headerY = margin - 8; // Move logo upward
     if (logoDataUrl && logoWidth > 0 && logoHeight > 0) {
       const logoX = (pageWidth - logoWidthPt) / 2;
       // Use JPEG format for JPG files - jsPDF will handle the high-resolution image properly
@@ -260,7 +260,7 @@ export async function generatePDF(
   const lineY = yPosition + 1;
 
   doc.setFontSize(fontSize);
-  doc.setFont(fontFamily, "normal");
+  doc.setFont(fontFamily, "bold");
   doc.setTextColor(blackR, blackG, blackB);
 
   // Labels
@@ -272,11 +272,12 @@ export async function generatePDF(
 
   // Black line
   doc.setDrawColor(blackR, blackG, blackB);
-  doc.setLineWidth(0.2);
+  doc.setLineWidth(0.4);
   doc.line(margin, lineY, pageWidth - margin, lineY);
 
   // Values
   yPosition = lineY + 4;
+  doc.setFont(fontFamily, "normal");
   doc.setFontSize(fontSize);
   doc.setTextColor(blackR, blackG, blackB);
   doc.text(clientName || "XXX", margin, yPosition);
@@ -337,7 +338,7 @@ export async function generatePDF(
       // Table headers: TIME, EVENT, LOCATION
       checkPageBreak(20);
       doc.setFontSize(fontSize);
-      doc.setFont(fontFamily, "normal");
+      doc.setFont(fontFamily, "bold");
       doc.setTextColor(blackR, blackG, blackB);
 
       const tableLeft = margin + tableIndent;
@@ -353,7 +354,7 @@ export async function generatePDF(
       // Black line under headers
       const headerLineY = yPosition + 1;
       doc.setDrawColor(blackR, blackG, blackB);
-      doc.setLineWidth(0.2);
+      doc.setLineWidth(0.4);
       doc.line(tableLeft, headerLineY, tableRight, headerLineY);
       yPosition += 5;
 
